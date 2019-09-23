@@ -3,9 +3,13 @@ package com.ws.framework;
 import com.caucho.hessian.io.Hessian2Input;
 import com.caucho.hessian.io.Hessian2Output;
 import com.ws.framework.model.Person;
+import io.netty.channel.nio.NioEventLoopGroup;
 import org.junit.jupiter.api.Test;
 
 import java.io.*;
+import java.util.HashMap;
+import java.util.concurrent.Semaphore;
+import java.util.regex.Pattern;
 import java.util.stream.IntStream;
 
 /**
@@ -62,36 +66,14 @@ public class JavaSerialize {
         //System.out.println(result);
     }
 
-    /**
-     * 性能测试
-     * 循环 100000/1000000/5000000/10000000次测试 性能提升稳定在1倍左右
-     */
+
     @Test
-    public void list() {
+    public void test2()throws Exception{
 
-        long startTime = System.currentTimeMillis();
 
-        IntStream.range(0, 1000000).forEach(i -> {
-            try {
-                serialize();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
+        System.out.println( 1 << 2);
 
-        System.out.println("耗时 -> " + (System.currentTimeMillis() - startTime));
 
-        startTime = System.currentTimeMillis();
-
-        IntStream.range(0, 1000000).forEach(i -> {
-            try {
-                hessianSerialize();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
-
-        System.out.println("耗时 -> " + (System.currentTimeMillis() - startTime));
     }
 
 }

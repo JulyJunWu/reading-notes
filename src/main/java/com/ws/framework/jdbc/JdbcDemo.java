@@ -1,14 +1,12 @@
 package com.ws.framework.jdbc;
 
 import com.ws.framework.model.Person;
+import org.apache.commons.lang.math.RandomUtils;
 import org.junit.Test;
 
 import java.lang.reflect.Method;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.IntStream;
 
 /**
@@ -120,6 +118,37 @@ public class JdbcDemo {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    @Test
+    public void batchInsert(){
+
+        try (
+                //SPI ServiceLoader自动加载驱动包 了解下线程上下文类加载器
+                Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/test", "root", "root");
+                //使用PreparedStatement预编译
+                CallableStatement statement = connection.prepareCall("insert into test values (?,?,?,?)")
+        ) {
+
+            IntStream.range(100000,200000).forEach(p->{
+
+                try{
+                    statement.setString(1, UUID.randomUUID().toString().replace("-",""));
+                    statement.setInt(2, RandomUtils.nextInt(10000000));
+                    statement.setInt(3,RandomUtils.nextInt(10000000));
+                    statement.setString(4,"ws" + p);
+                    statement.executeUpdate();
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+            });
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+
     }
 
 }
