@@ -7,6 +7,10 @@ import org.apache.zookeeper.data.Stat;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.InputStream;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -16,6 +20,31 @@ import java.util.concurrent.TimeUnit;
  * <p>
  * zk cli 命令 :
  * ls get create delete
+ *
+ *  xid 类型 :
+ *      -2 : pings
+ *      -4 : AuthPacket
+ *      -1 : notification(此处应该是回调)
+ *
+ *   真正接收数据和发送数据是在 ClientCnxnSocketNIO.doIo()
+ *   当xid = -1 时,触发回调接口
+ *   接收数据 (回调也是这边)org.apache.zookeeper.ClientCnxn.SendThread.readResponse(java.nio.ByteBuffer)
+ *
+ *   ClientWatchManager (具体实现类ZKWatchManager): 监听管理器
+ *   ZKWatchManager : 持有三个map变量,分别存储三种类型监听器 , 分别是 exists , data , children
+ *   处理监听回调  1.org.apache.zookeeper.ClientCnxn.EventThread.run();
+ *               2.org.apache.zookeeper.ClientCnxn.EventThread#processEvent(java.lang.Object);
+ *   ClientCnxn:
+ *      持有2个线程,分别是
+ *          1.发送数据线程 SendThread sendThread;
+ *          2.数据处理线程(回调也是这个线程处理) EventThread eventThread
+ *      持有发送列表/待响应列表
+ *          LinkedList<Packet> outgoingQueue 待发送数据列表
+ *          LinkedList<Packet> pendingQueue  待响应数据列表(已发送待响应)
+ *
+ *    根据服务器响应结果匹配需要调用哪些监听 ZKWatchManager.materialize
+ *
+ *  server.id=server-1:2888:3888   2888:zk集群通讯端口 ; 3888:选举端口
  */
 public class ZkDemo {
 
@@ -26,13 +55,18 @@ public class ZkDemo {
 
     @Before
     public void init() throws Exception {
-        zooKeeper = new ZooKeeper("server-1:2181,server-2:2181,server-3:2181", 30000, p -> {
-        });
+        zooKeeper = new ZooKeeper("server-1:2181,server-2:2181,server-3:2181", 30000, new MyWatcher(DATA_CHANGE_TYPE));
     }
 
-    public static Watcher getWatcher(int listenerType) {
-        return watchedEvent -> {
-            Watcher.Event.EventType type = watchedEvent.getType();
+    public static class MyWatcher implements Watcher{
+        private int listenerType ;
+        public MyWatcher(int type){
+            this.listenerType = type;
+        }
+
+        @Override
+        public void process(WatchedEvent event) {
+            Watcher.Event.EventType type = event.getType();
             switch (type) {
                 case NodeChildrenChanged:
                     System.out.println("子节点发生变动");
@@ -62,8 +96,11 @@ public class ZkDemo {
             if (listenerType == CHILDREN_CHANGE) {
                 listenerChildrenChange();
             }
+        }
+    }
 
-        };
+    public static Watcher getWatcher(int listenerType) {
+        return new MyWatcher(listenerType);
     }
 
     public static void main(String[] args) throws Exception {
@@ -123,8 +160,8 @@ public class ZkDemo {
     public void listener() throws Exception {
 
         listenerExists();
-        listenerDataChange();
-        listenerChildrenChange();
+        //listenerDataChange();
+        //listenerChildrenChange();
         TimeUnit.SECONDS.sleep(10000);
     }
 
@@ -165,6 +202,27 @@ public class ZkDemo {
             children.stream().forEach(System.out::println);
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+
+    @Test
+    public void packet() throws Exception {
+
+        ServerSocket serverSocket = new ServerSocket();
+        serverSocket.bind(new InetSocketAddress(2181));
+
+        while (true) {
+            Socket accept = serverSocket.accept();
+            int port = accept.getPort();
+            System.out.println(port);
+            InputStream inputStream = accept.getInputStream();
+            byte[] bytes = new byte[1024];
+
+            while (inputStream.read(bytes) != -1) {
+                System.out.println(new String(bytes, "UTF-8"));
+            }
+
         }
     }
 
