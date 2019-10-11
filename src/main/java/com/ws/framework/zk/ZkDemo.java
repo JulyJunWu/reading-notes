@@ -31,7 +31,7 @@ import java.util.concurrent.TimeUnit;
  *   接收数据 (回调也是这边)org.apache.zookeeper.ClientCnxn.SendThread.readResponse(java.nio.ByteBuffer)
  *
  *   ClientWatchManager (具体实现类ZKWatchManager): 监听管理器
- *   ZKWatchManager : 持有三个map变量,分别存储三种类型监听器 , 分别是 exists , data , children
+ *   ZKWatchManager : 持有三个map变量,分别存储三种类型监听器 , 分别是 existWatches , dataWatches , childrenWatches
  *   处理监听回调  1.org.apache.zookeeper.ClientCnxn.EventThread.run();
  *               2.org.apache.zookeeper.ClientCnxn.EventThread#processEvent(java.lang.Object);
  *   ClientCnxn:
@@ -41,10 +41,15 @@ import java.util.concurrent.TimeUnit;
  *      持有发送列表/待响应列表
  *          LinkedList<Packet> outgoingQueue 待发送数据列表
  *          LinkedList<Packet> pendingQueue  待响应数据列表(已发送待响应)
- *
+ *          pendingQueue存储的元素条件: 从outgoingQueue取出Packet,Packet满足3个条件
+ *             (1).RequestHeader != null (2).非ping命令 (3).非auth命令 , 如果都满足则加入pendingQueue列表;
+ *             具体查看源码ClientCnxnSocketNIO.doIO P125
+ *      eventThread线程不断从自身waitingEvents阻塞队列获取任务执行,其实这个就是执行返回的结果(所谓的调用回调) , processEvent(event)
  *    根据服务器响应结果匹配需要调用哪些监听 ZKWatchManager.materialize
  *
  *  server.id=server-1:2888:3888   2888:zk集群通讯端口 ; 3888:选举端口
+ *  请求类型 RequestHeader type属性含义 请看常量ZooDefs.OpCode
+ *  客户端定时发送ping : org.apache.zookeeper.ClientCnxn.SendThread.sendPing()
  */
 public class ZkDemo {
 
