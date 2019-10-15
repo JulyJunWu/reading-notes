@@ -73,6 +73,48 @@ Spring Cloud简介:
 并开启了Spring Boot程序的组件扫描和自动配置功能。在开发Spring Boot程序的过程中，常常会组合使用@Configuration、
 @Enable-AutoConfiguration和@ComponentScan等注解，所以Spring Boot提供了@SpringootApp-lication,来简化开发。
 
+Spring Boot Actuator:
+    Actuator提供了很多监控端点。可使用http://{ip}:(port}/{endpoint}的形式访问这些端点，从而了解应用程序的运行状况。
+    Actuator提供的端点，如下。
+          端点                   描述                                                             HTTP方法
+        autoconfg       显示自动配置的信息                                                          GET
+        beans           显示应用程序上下文所有的Spring bean                                          GET
+        confgprops      显示所有@ConfigurationProperties的配置属性列表                               GET
+        dump            显示线程活动的快照                                                           GET 
+        env             显示应用的环境变量                                                           GET
+        health          显示应用程序的健康指标，这些值由HealthIndicator的实现类提供                       GET
+        info            显示应用的信息，可使用info.属性自定义info端点公开的数据                           GET
+        mappings        显示所有的URI路径                                                            GET
+        metrics         显示应用的度量标准信息                                                        GET
+        shutdown        关闭应用(默认情况下不启用，如需启用，需设置endpoints shutdownPOSTenabled-true)    POST
+        trace           显示跟踪信息(默认情况F为最近100个HTTP请求)                                      GET
 
+服务提供者、服务消费者、服务发现组件三者关系大致如下:
+    1.各个微服务在启动时，将自己的网络地址等信息注册到服务发现组件中，服务发现组件会存储这些信息。
+    2.服务消费者可从服务发现组件查询服务提供者的网络地址，并使用该地址调用服务提供者的接口。
+    3.各个微服务与服务发现组件使用一定机制(例如心跳)通信。服务发现组件如长时间无法与某微服务实列通信，就会注销该实例。
+    4.微服务网络地址发生变更(例如实例增减或者IP端口发生变化等)时，会重新注册到服务发现组件。使用这种方式，服务消费者就无须人工修改提供者的网络地址了。
+
+服务发现组件应具备以下功能:
+    ● 服务注册表:是服务发现组件的核心，它用来记录各个微服务的信息，例如微服务的名称、IP、端口等。服务注册表提供查询API和管理API,查询API用于查询可用
+的微服务实例，管理API用于服务的注册和注销。
+    ● 服务注册与服务发现:服务注册是指微服务在启动时，将自己的信息注册到服务发现组件上的过程。服务发现是指查询可用微服务列表及其网络地址的机制。
+    ● 服务检查:服务发现组件使用定机制定时 检测已注册的服务，如发现某实例长时间无法访问，就会从服务注册表中移除该实例。
+
+Eureka:
+    Eureka是Netlix开源的服务发现组件，本身是个基f REST的服务。它包含Server和Client两部分。Spring Cloud将它集成在子项目Spring Cloud Netlix中，
+从而实现微服务的注册与发现。
+    Eureka 包含两个组件: Eureka Server和Eureka Client,它们的作用如下:
+      ● Eureka Server提供服务发现的能力，各个微服务启动时，会向Eureka Server注册自己的信息(例如IP、端口、微服务名称等), Eureka Server会存储这些信息
+      ● Eureka Client是个Java客户端，用于简化与Eureka Server的交互。
+      ● 微服务启动后，会周期性(默认30秒)地向EurekaServer发送心跳以续约自己的“租期”
+      ● 如果Eureka Server在一定时间内没有接收到某个微服务实例的心跳，Eureka Server将会注销该实例(默认90秒)。
+      ● 默认情况下，Eureka Server同时也是Eureka Client。 多个Eureka Server实例，互相之间通过复制的方式，来实现服务注册表中数据的同步。
+      ● Eureka Client会缓存服务注册表中的信息。这种方式有一定的优势首先， 微服务无须每次请求都查询Eureka Server,从而降低了Eureka Server的压力;
+      其次，即使EurekaServer所有节点都宕掉，服务消费者依然可以使用缓存中的信息找到服务提供者并完成调用。
+    Eureka通过心跳检查、客户端缓存等机制，提高了系统的灵活性、可伸缩性和可用性。
+    @EnableEurekaClient注解可以替代@EnableDiscoveryClient。在Spring Cloud中，服务发现组件有多种选择，例如Zookeeper、Consul等。
+    @EnableDiscoveryClient 为各种服务组件提供了支持，该注解是spring cloud-commons项目的注解，是一个高度的抽象;而@EnableEurekaClient 表明是
+Eureka的Client,该注解是spring cloud-netflix项目中的注解，只能与Eureka一起工作。当Eureka在项目的classpath中时，两个注解没有区别。
 
 
