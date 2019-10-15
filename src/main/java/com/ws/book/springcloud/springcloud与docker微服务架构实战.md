@@ -117,4 +117,38 @@ Eureka:
     @EnableDiscoveryClient 为各种服务组件提供了支持，该注解是spring cloud-commons项目的注解，是一个高度的抽象;而@EnableEurekaClient 表明是
 Eureka的Client,该注解是spring cloud-netflix项目中的注解，只能与Eureka一起工作。当Eureka在项目的classpath中时，两个注解没有区别。
 
+Eureka的元数据有两种，分别是标准元数据和自定义元数据。
+    标准元数据指的是主机名、IP地址、端口号、状态页和健康检查等信息，这些信息都会被发布在服务注册表中，用于服务之间的调用。
+    自定义元数据可以使用eureka.instance.metadata-map配置，这些元数据可以在远程客户端中访问，但一般不会改变客户端的行为，除非客户端知道该元数据的含义。
+
+Eureka的自我保护模式:
+    默认情况下，如果Eureka Server在一定时间内没有 接收到某个微服务实例的心跳，EurekaServer将会注销该实例(默认90秒)。但是当网络分区故障发生时，微服务与Eureka
+Server之间无法正常通信，以上行为可能变得非常危险了因为微服务本身其实是健康的，此时本不应该注销这个微服务。
+    Eureka通过“自我保护模式”来解决这个问题一当 Eureka Server节点在短时间内丢失过多客户端时(可能发生了网络分区故障),那么这个节点就会进入自我保护模式。一旦进入该模式
+Eureka Server就会保护服务注册表中的信息，不再删除服务注册表中的数据(也就是不会注销任何微服务)。当网络故障恢复后，该Eureka Server节点会自动退出自我保护模式。
+    自我保护模式是一种应对网络 异常的安全保护措施。它的架构哲学是宁可同时保留所有微服务(健康的微服务和不健康的微服务都会保留),也不盲目注销任何健康的微服务。
+使用自我保护模式，可以让Eureka集群更加的健壮、稳定。
+    可以使用eureka.server.enable-self-preservation=false 禁用自我保护模式。
+
+Eureka的健康检查:
+    Status=UP,表示应用程序状态正常。应用状态还有其他取值，例如DOWN、OUT _OF SERVICE、UNKNOWN等。只有标记为“UP”的微服务会被请求。
+    Eureka Server与Eureka Client之间使用心跳机制来确定Eureka Client的状态，默认情况下，服务器端与客户端的心跳保持正常，应用程序就会始终保持“UP”状态。
+以上机制并不能完全反映应用程序的状态。如,微服务与Eureka Server之间的心跳正常，Eureka Server认为该微服务“UP";然而，该微服务的数据源发生了问题(例如因为网络抖动，
+连不上数据源)，根本无法正常工作。Spring Boot Actuator提供了/health端点，该端点可展示应用程序的健康信息。
+    那么如何才能将该端点中的健康状态传播到Eureka Server呢?
+    启用Eureka的健康检查。这样，应用程序就会将自己的健康状态传播到Eureka Server。微服务配置开启如下:
+        eureka.client.healthcheck.enabled = true
+    某些场景下，可能希望更细粒度地控制健康检查,此时可实现com.netflix.appinfo.HealthCheckHandler接口。
+
+使用Ribbon实现客户端侧负载均衡:
+    Ribbon是Netflix发布的负载均衡器，它有助于控制HTTP和TCP客户端的行为。为Ribbon配置服务提供者地址列表后，Ribbon就可基于某种负载均衡算法，自动地帮助
+服务消费者去请求。Ribbon 默认为我们提供了很多的负载均衡算法，如轮询、随机等。也可为Ribbon实现自定义的负载均衡算法。
+    在Spring Cloud中，当Ribbon与Eureka配合使用时，Ribbon可自动从Eureka Server获取服务提供者地址列表，并基于负载均衡算法，请求其中一个服务提供者实例。
+    
+   当Ribbon和Eureka配合使用时，会自动将虚拟主机名映射成微服务的网络地址。
+   虚拟主机名与虚拟IP非常类似，可将其简单理解成为提供者的服务名称，因为在默认情况下,虚拟主机名和服务名称是一致的。也可使用配置属性eureka.instance.virtual-host-name或
+者eureka.instance.secure-virtual-host.name指定虚拟主机名。
+
+
+
 
