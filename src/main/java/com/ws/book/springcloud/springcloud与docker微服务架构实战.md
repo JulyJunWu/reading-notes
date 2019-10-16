@@ -213,3 +213,80 @@ feign整合Hystrix,Spring Cloud默认已为Feign整合了Hystrix,只须使用@Fe
 通过@FeignClient注解的FallbackFactory检查回退原因,实现FallbackFactory接口即可;
 @FeignClient注解的属性fallback和fallbackFactory二选一,前者不提供错误异常,后者提供错误异常;
 
+Feign全局禁用Hystrix。只须在application.yml中配置feign.hystrix.enabled=false即可。
+
+Hystrix的监控:
+    添加spring-boot-starter-actuator依赖,就可使用/hystrix.stream端点(http://ip:port/hystrix.stream)获得Hystrix的监控信息了。
+
+使用Zul构建微服务网关:
+
+  客户端直接与各个微服务通信，会有以下的问题:
+    ●客户端会多次请求不同的微服务，增加了客户端的复杂性。
+    ●存在跨域请求，在一定场景下处理相对复杂。
+    ●认证复杂，每个服务都需要独立认证。
+    ●难以重构，随着项目的迭代，可能需要重新划分微服务。例如,可能将多个服务合并成一个或者将一个服务拆分成多个。如果客户端直接与微服务通信，那么重构将
+会很难实施。
+    ●某些微服务可能使用了防火墙/浏览器不友好的协议，直接访问会有-定的困难。
+  以上问题可借助微服务网关解决。微服务网关是介于客户端和服务器端之间的中间层,所有的外部请求都会先经过微服务网关。
+                     ↗  用户服务
+        用户->服务网关 ->  订单服务
+                     ↘  库存服务
+  如上，微服务网关封装了应用程序的内部结构，客户端只须跟网关交互，而无须直接调用特定微服务的接口。这样，开发就可以得到简化。不仅如此，使用微服务网关还有以
+下优点:
+  ● 易于监控。可在微服务网关收集监控数据并将其推送到外部系统进行分析。
+  ● 易于认证。可在微服务网关上进行认证，然后再将请求转发到后端的微服务，而无须在每个微服务中进行认证。
+  ● 减少了客户端与各个微服务之间的交互次数。
+
+Zuul简介:
+   Zuul是Netflix开源的微服务网关，它可以和Eureka、Ribbon、Hystrix 等组件配合使用。
+   Zuul的核心是一系列的过滤器， 这些过滤器可以完成以下功能。
+      ● 身份认证与安全:识别每个资源的验证要求，并拒绝那些与要求不符的请求。
+      ● 审查与监控:在边缘位置追踪有意义的数据和统计结果，从而带来精确的生产视图。
+      ● 动态路由:动态地将请求路由到不同的后端集群。
+      ● 压力测试:逐渐增加指向集群的流量，以了解性能。
+      ● 负载分配:为每种负载类型分配对应容量，并弃用超出限定值的请求。
+      ● 静态响应处理:在边缘位置直接建立部分响应，从而避免其转发到内部集群。
+      ● 多区域弹性:跨越AWS Region进行请求路由，旨在实现ELB ( Elastic Load Balancing )使用的多样化，以及让系统的边缘更贴近系统的使用者。
+  Spring Cloud对Zuul进行了整合与增强。目前,Zuul使用的默认HTTP客户端是Apache HTTP Client,也可以使用RestClient或者okhttp3.0kHttpClient;
+如果想要使用RestClient,可以设置rbbon.restclient.enabled=true;想要使用okhttp3.0kHttpClient,可以设置ribbon.okhttp.enabled=true。
+    默认情况下，Zuul 会代理所有注册到Eureka Server的微服务，并且Zuul的路由规则如下:
+    http://ZUUL_ HOST:ZUUL PORT/微服务在Eureka上的serviceId/** 会被转发到serviceId对应的微服务。
+    访问http://ZUUL_ HOST:ZUUL PORT/routes 可以看到zuul所能转发的微服务列表;
+
+自定义zuul配置:
+   1.自定义指定微服务 的访问路径。
+    配置zuul.routes.指定微服务的serviceId=指定路径即可。例如:
+    zuul.routes.microservice-provider-user=/user/**
+    这样设置microservice-provider-user微服务就会被映射到/user/**路径。
+   2.忽略指定微服务。
+    忽略服务非常简单，可以使用zuul.ignored-services配置需要忽略的服务，多个用逗号分隔。使用 '*' 忽略所有微服务例如:
+    zuul.ignored-services=serviceId1,serviceId2
+   3.使用正则表达式指定Zuul的路由匹配规则,借助PatternServiceRouteMapper,实现从微服务到映射路由的正则配置。.
+   4.忽略某些路径,更细粒度的路由控制。例如，想让Zul代理某个微服务，同时又想保护该微服务的某些敏感路径。此时，
+可使用ignored-Patterns,指定忽略的正则。例如:
+    zuul.ignoredPatterns=/**/admin/** #忽略所有包含/admin/的路径
+
+header传播/禁止: 说白了就是需要zuul转发到目标微服务的头部
+    使用zuul.sensitive-headers=Cookie,Set-Cookie,Authorization 全局指定敏感Header(传播头部);
+    使用zuul.ignored-headers: header1,header2 禁止某些头部传播;
+    可以更细粒度为每个微服务指定需要传播的header;
+    默认情况下,zuul.ignored-headers是空值，但如果Spring Security在项目的classpath中，那么zuul.ignored-headers的默认值就是
+Pragma ,Cache-Control,X-Frame -Options,X-Content-Type-0ptions,X-XSS-Protection,Expires。所以，当Spring Security在项目的classpath中，
+同时又需要使用下游微服务的Spring Security的Header时，可以将zuul.ignoreSecurity-Headers设置为false。
+    
+zuul上传文件:
+    对于小文件( 1M以内)上传，无须任何处理，即可正常上传。对于大文件( 10M以上)上传，需要为上传路径添加/zuul前缀,否则报错(因为断路器问题)。也可使用zuul.servlet-path 自定义前缀。
+        
+zuul过滤器:
+    Zuul大部分功能都是通过过滤器来实现的。Zuul中定义了4种标准过滤器类型，这些过滤器类型对应于请求的典型生命周期。
+    ● PRE:这种过滤器在请求被路由之前调用。可利用这种过滤器实现身份验证、在集群中选择请求的微服务、记录调试信息等。
+    ● ROUTING:这种过滤器将请求路由到微服务。这种过滤器用于构建发送给微服务的请求，并使用Apache HttpClient或Netfilx Ribbon请求微服务。
+    ● POST:这种过滤器在路由到微服务以后执行。(应该是调用完微服务返回后)这种过滤器可用来为响应添加标准的HTTP Header、收集统计信息和指标、将响应从微服务发送给客户端等。
+    ● ERROR:在其他阶段发生错误时执行该过滤器。
+    除了默认的过滤器类型，Zuul 还允许创建自定义的过滤器类型。
+
+
+    
+    
+
+    
