@@ -1,0 +1,51 @@
+使用mysql定时任务及使用存储函数
+
+mysql:
+	查看是否开启事件 : show variables like 'event_scheduler';
+	设置开启:
+			set global event_scheduler = on;
+			set @@global.event_scheduler = on;
+			set global event_scheduler = 1;
+			set @@global.event_scheduler = 1;
+	删除事件: drop event if exists `事件名称`;
+			  drop event test2_insert_5_minute;
+	查看事件: show events;
+	创建事件:
+		案例1:
+			drop event if exists `test_event`; -- 删除事件
+			delimiter ;; -- 分隔符
+			create definer=`root`@`localhost` event `test_event` on schedule every 1 second starts '2018-06-20 20:00:00' on completion preserve enable
+			do
+			    begin
+			    	insert into user(name, age,sex) values('ws',18,'男'); --需要执行的sql任务
+			    end
+			;;
+			delimiter ;
+		案列2:
+			create event if not exists test_event2 -- 事件名称
+			on schedule every 1 second starts '2019-11-20 00:00:00'  -- 指定事件从11-20开始,间隔1秒执行
+			on completion preserve	-- 执行完毕是否删除事件,此处是不删除该事件
+			enable -- 启用事件
+			do insert into user(name, age,sex) values('ws',18,'男');	-- 执行的业务逻辑(也可以直接调用存储过程)
+	关闭事件
+		alter event test_event disable;
+	开启事件
+		alter event test_event enable;
+	存储过程
+		delimiter ;;  --指定分隔符
+		drop procedure if exists test_event5 ;;
+		create procedure test_event4()
+         begin
+			declare i int default 0;
+			while i<100 do
+               insert into user(name,age,sex) values('ws',10,'男');
+               set i=i+1;
+			end while;
+		 end ;;
+	查看所有存储函数:
+		show procedure status;
+	事件调用存储过程:
+		create event e1 on schedule every 1 week
+		do call 存储过程名称(参数);
+	调用存储过程:
+		call 存储过程名称
