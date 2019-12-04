@@ -87,6 +87,12 @@
             <version>2.1.6.RELEASE</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.mybatis</groupId>
+            <artifactId>mybatis</artifactId>
+            <version>3.4.6</version>
+        </dependency>
+
     </dependencies>
 
     <build>
