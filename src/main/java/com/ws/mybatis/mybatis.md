@@ -8,3 +8,18 @@ mappers配置: 允许两种方式
         
 Configuration
 SqlSessionFactory -> DefaultSqlSessionFactory
+SqlSession -> DefaultSqlSession
+TransactionIsolationLevel ; 事物的级别枚举
+ExecutorType: Executor类型,枚举有三个值:SIMPLE,REUSE,BATCH; 默认是SIMPLE, 如果是批量的sql语句的话BATCH类型更实用;
+Executor ->  BatchExecutor  -->  ExecutorType.SIMPLE
+             ReuseExecutor  -->  ExecutorType.REUSE
+             SimpleExecutor --> ExecutorType.BATCH
+MapperProxyFactory : 生成Mapper接口代理类
+MapperProxy : 实现InvocationHandler接口,很明显JDK的动态代理
+MapperMethod
+MappedStatement
+ResultHandler
+
+理论上mybatis是可以不需要Mapper接口的,因为可以通过命名空间+id进行访问;
+    
+    

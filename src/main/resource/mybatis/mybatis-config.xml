@@ -19,12 +19,15 @@
                 <property name="url" value="jdbc:mysql://localhost:3306/ws?useSSL=false"/>
                 <property name="username" value="root"/>
                 <property name="password" value="admin"/>
+                <!--数据库最大可连接数-->
+                <property name="poolMaximumActiveConnections" value="160"/>
             </dataSource>
         </environment>
     </environments>
 
     <mappers>
         <mapper resource="mybatis/mapper/UserMapper.xml"/>
+        <mapper resource="mybatis/mapper/test.xml"/>
        <!-- <package name="com.ws.mybatis.dao"/>-->
     </mappers>
 </configuration>

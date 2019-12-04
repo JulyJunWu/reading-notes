@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--无Mapper映射接口-->
+<mapper namespace="test">
+
+    <sql id="allColumn">
+        id , name , age , sex
+    </sql>
+
+    <select id="selectAll" resultType="user" parameterType="user">
+        select <include refid="allColumn"/>
+        from  user limit 10
+    </select>
+
+    <select id="selectById" parameterType="string" resultType="user">
+        select <include refid="allColumn"/> from user where id = #{id}
+    </select>
+
+    <insert id="insert" parameterType="user">
+        insert into user values (#{id},#{name},#{age},#{sex})
+    </insert>
+
+    <delete id="deleteUser" parameterType="string">
+        delete from user where id = #{id}
+    </delete>
+
+    <update id="updateUser" parameterType="user">
+        update user
+        <set>
+            <if test="name != null">
+                name = #{name},
+            </if>
+            <if test="age != null">
+                name = #{age},
+            </if>
+            <if test="sex != null">
+                name = #{sex}
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+
+
+
+
+</mapper>

@@ -2,6 +2,7 @@
 
 mysql:
 	查看是否开启事件 : show variables like 'event_scheduler';
+	show status like '%thread%' 查看mysql连接线程
 	设置开启:
 			set global event_scheduler = on;
 			set @@global.event_scheduler = on;
