@@ -1,0 +1,10 @@
+syntax = "proto2";
+package com.ws.netty.protobuf;
+
+option java_package = "com.ws.netty.protobuf";
+option java_outer_classname = "DataInfo";
+
+message Student{
+    required string name = 1;
+    optional  int32 age = 2;
+}
