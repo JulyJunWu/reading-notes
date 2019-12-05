@@ -3,8 +3,11 @@ package com.ws.mybatis;
 import com.ws.mybatis.dao.UserMapper;
 import com.ws.mybatis.model.User;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.ibatis.builder.xml.XMLConfigBuilder;
 import org.apache.ibatis.datasource.pooled.PooledDataSource;
+import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.mapping.Environment;
+import org.apache.ibatis.parsing.XNode;
 import org.apache.ibatis.session.Configuration;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
@@ -13,7 +16,8 @@ import org.apache.ibatis.transaction.jdbc.JdbcTransactionFactory;
 import org.junit.Test;
 
 import java.io.InputStream;
-import java.util.concurrent.TimeUnit;
+import java.io.Reader;
+import java.util.Properties;
 
 /**
  * @author JunWu
@@ -84,5 +88,24 @@ public class MyBatisTest {
         SqlSession sqlSession = sessionFactory.openSession();
         Object selectOne = sqlSession.selectOne("test.selectById", "199ae857118111eab6558c16457fff38");
         System.out.println(selectOne);
+    }
+
+    /**
+     * 测试 Properties配置读取的优先级问题
+     * 优先级顺序 代码构造函数的Properties > 读取外部Properties配置 > 配置properties属性
+     * @see XMLConfigBuilder#propertiesElement(XNode)
+     */
+    @Test
+    public void testProperties()throws Exception{
+        Reader reader = Resources.getResourceAsReader("mybatis/mybatis-config.xml");
+
+        Properties properties = new Properties();
+        properties.setProperty("custom","3");
+        SqlSessionFactory sessionFactory = new SqlSessionFactoryBuilder().build(reader, properties);
+
+        String custom = sessionFactory.getConfiguration().getVariables().getProperty("custom");
+        // 3
+        System.out.println(custom);
+
     }
 }
