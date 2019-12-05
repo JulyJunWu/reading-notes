@@ -39,3 +39,19 @@ Properties属性添加的三种方式(优先级顺序导读):
             </properties>
     上述三种方式优先级是 1 > 2 > 3 , 也就是说相同的属性,那么最终的值是以1为准;
     源码地址 -> XMLConfigBuilder.propertiesElement
+  
+settings标签解析:
+    1.将setting标签属性解析转换为Properties
+    2.设置configuration属性,从properties获取,无则设置默认变量(Configuration设置属性源码 -> XMLConfigBuilder.settingsElement )   
+    
+typeAliases标签解析(注册别名服务):
+    二种配置方式:
+        方式一: 使用package标签,将此路径下的所有的类注册别名;将类名变成小写作为别名;
+                如果该类拥有@Alias标签,则以此值作为别名;
+        方式二: 使用typeAlias标签注册单个类别名;
+   TypeAliasRegistry: 别名注册服务类,默认已经注册大量常用类别名
+        Map<String, Class<?>> TYPE_ALIASE;  存放别名缓存; 
+        注册参考:
+            this.registerAlias("object", Object.class);
+            this.registerAlias("date[]", Date[].class);
+    解析源码: XMLConfigBuilder.typeAliasesElement         
