@@ -8,6 +8,7 @@ mappers配置: 允许两种方式
         
 Configuration:
     Properties variables; 存放定义的Properties属性
+    TypeHandlerRegistry typeHandlerRegistry; 存放已注册的TypeHandler
 SqlSessionFactory -> DefaultSqlSessionFactory
 SqlSession -> DefaultSqlSession
 TransactionIsolationLevel ; 事物的级别枚举
@@ -55,3 +56,11 @@ typeAliases标签解析(注册别名服务):
             this.registerAlias("object", Object.class);
             this.registerAlias("date[]", Date[].class);
     解析源码: XMLConfigBuilder.typeAliasesElement         
+
+TypeHandlerRegistry : 存放注册的typeHandler
+typeHandlers: 对数据库返回数据进行类型转换为所需类型,如 String -> Enum;
+    使用: 如User类中包含一个枚举属性,那么注册一个该枚举属性转换器即可(TypeHandler),然后将转换器注册到mybatis中,这样就可以了;注册示例如下:
+        <typeHandlers>
+            <typeHandler handler="com.ws.mybatis.typehandler.StringToSexEnum" />
+        </typeHandlers>
+    

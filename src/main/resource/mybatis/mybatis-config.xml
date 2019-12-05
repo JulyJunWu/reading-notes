@@ -18,6 +18,9 @@
     <typeAliases>
         <typeAlias type="com.ws.mybatis.model.User" alias="user"></typeAlias>
     </typeAliases>
+    <typeHandlers>
+        <typeHandler handler="com.ws.mybatis.typehandler.StringToSexEnum" />
+    </typeHandlers>
     <environments default="development">
         <environment id="development">
             <transactionManager type="jdbc"/>

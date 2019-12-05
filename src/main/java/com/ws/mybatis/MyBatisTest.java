@@ -1,6 +1,7 @@
 package com.ws.mybatis;
 
 import com.ws.mybatis.dao.UserMapper;
+import com.ws.mybatis.model.SexEnum;
 import com.ws.mybatis.model.User;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.builder.xml.XMLConfigBuilder;
@@ -82,7 +83,7 @@ public class MyBatisTest {
      * 直接通过命名空间 + id 查询
      */
     @Test
-    public void createWithoutMapper(){
+    public void createWithoutMapper() {
         SqlSessionFactory sessionFactory = new SqlSessionFactoryBuilder().build(ClassLoader.getSystemResourceAsStream("mybatis/mybatis-config.xml"));
 
         SqlSession sqlSession = sessionFactory.openSession();
@@ -93,19 +94,43 @@ public class MyBatisTest {
     /**
      * 测试 Properties配置读取的优先级问题
      * 优先级顺序 代码构造函数的Properties > 读取外部Properties配置 > 配置properties属性
+     *
      * @see XMLConfigBuilder#propertiesElement(XNode)
      */
     @Test
-    public void testProperties()throws Exception{
+    public void testProperties() throws Exception {
         Reader reader = Resources.getResourceAsReader("mybatis/mybatis-config.xml");
 
         Properties properties = new Properties();
-        properties.setProperty("custom","3");
+        properties.setProperty("custom", "3");
         SqlSessionFactory sessionFactory = new SqlSessionFactoryBuilder().build(reader, properties);
 
         String custom = sessionFactory.getConfiguration().getVariables().getProperty("custom");
         // 3
         System.out.println(custom);
+
+    }
+
+    /**
+     * 测试TypeHandler属性转换器
+     */
+    @Test
+    public void testTypeHandler() throws Exception {
+        Reader reader = Resources.getResourceAsReader("mybatis/mybatis-config.xml");
+        SqlSessionFactory sessionFactory = new SqlSessionFactoryBuilder().build(reader);
+
+        SqlSession sqlSession = sessionFactory.openSession();
+        UserMapper mapper = sqlSession.getMapper(UserMapper.class);
+        User user = mapper.selectById("199ae857118111eab6558c16457fff38");
+        System.out.println(user);
+        user.setId("199ae857118111eab6558c164578ff98");
+        user.setAge(88);
+        user.setName("念念不忘");
+        user.setSex(SexEnum.MALE);
+
+        mapper.insert(user);
+        sqlSession.commit();
+        sqlSession.close();
 
     }
 }
