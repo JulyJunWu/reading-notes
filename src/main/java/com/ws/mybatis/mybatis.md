@@ -73,3 +73,7 @@ ObjectFactory -> DefaultObjectFactory
 
 plugins(其实就是Interceptor): 拦截器
     
+resultMap标签:
+    一对一标签 : <association></association>
+    一对多标签 : <collection></collection>
+    鉴别器标签

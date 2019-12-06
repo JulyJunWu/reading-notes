@@ -3,20 +3,50 @@
 
 <mapper namespace="com.ws.mybatis.dao.UserMapper">
 
+    <resultMap id="baseResultMap" type="user">
+        <id column="id" property="id"></id>
+        <result column="name" property="name"></result>
+        <result column="age" property="age"></result>
+        <result column="sex" property="sex" typeHandler="com.ws.mybatis.typehandler.SexEnumTypeHandler"></result>
+        <!--
+            级联查询一对一
+            column: 级别查询所需参数,多个用逗号隔开
+            select: 查询命名空间, 命名空间 + ID 组成
+            fetchType: 是否延迟加载 lazy : eager
+         -->
+        <association property="shop" fetchType="lazy" column="id" select="com.ws.mybatis.dao.ShopMapper.selectOneByUserId" >
+        </association>
+        <!--    级别查询一对多    -->
+        <collection property="shopList" column="id" select="com.ws.mybatis.dao.ShopMapper.selectShopByUserId" fetchType="lazy">
+        </collection>
+    </resultMap>
+
     <sql id="allColumn">
         id , name , age , sex
     </sql>
 
+    <sql id="customColumns">
+        ${tableAlias}.id , ${tableAlias}.name
+    </sql>
+
     <select id="selectAll" resultType="user" parameterType="user">
-        select <include refid="allColumn"/>  from  user limit 0 , 10
+        select
+        <include refid="customColumns">
+            <property name="tableAlias" value="A"></property>
+        </include>
+        from user A limit 0 , 10
     </select>
 
-    <select id="selectById" parameterType="string" resultType="user">
-        select <include refid="allColumn"/>   from user where id = #{id}
+    <select id="selectById" parameterType="string" resultMap="baseResultMap">
+        select
+        <include refid="allColumn"/>
+        from user where id = #{id}
     </select>
 
     <select id="selectMapById" parameterType="string" resultType="map">
-        select <include refid="allColumn"/>  from user where id = #{id}
+        select
+        <include refid="allColumn"/>
+        from user where id = #{id}
     </select>
 
     <insert id="insert" parameterType="user">
@@ -42,8 +72,6 @@
         </set>
         where id = #{id}
     </update>
-
-
 
 
 </mapper>

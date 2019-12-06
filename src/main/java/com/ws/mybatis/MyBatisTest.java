@@ -1,7 +1,9 @@
 package com.ws.mybatis;
 
+import com.ws.mybatis.dao.ShopMapper;
 import com.ws.mybatis.dao.UserMapper;
 import com.ws.mybatis.model.SexEnum;
+import com.ws.mybatis.model.Shop;
 import com.ws.mybatis.model.User;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.builder.xml.XMLConfigBuilder;
@@ -184,7 +186,7 @@ public class MyBatisTest {
     @Test
     public void testInterceptor(){
         UserMapper userMapper = sqlSessionFactory.openSession().getMapper(UserMapper.class);
-        List<User> user = userMapper.selectAll(null);
-        log.info("{}",user.size());
+        User user = userMapper.selectById("199adfb8118111eab6558c16457fff38");
+        log.info("{}",user.getName());
     }
 }

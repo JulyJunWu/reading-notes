@@ -2,6 +2,8 @@ package com.ws.mybatis.model;
 
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * 实体bean - User
  *
@@ -17,5 +19,9 @@ public class User {
     private int age;
 
     private SexEnum sex;
+
+    private List<Shop> shopList;
+
+    private Shop shop;
 
 }

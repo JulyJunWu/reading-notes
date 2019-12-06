@@ -13,11 +13,12 @@
         <setting name="cacheEnabled" value="false"/>
         <setting name="useGeneratedKeys" value="true"/>
         <setting name="defaultExecutorType" value="REUSE"/>
-        <setting name="mapUnderscoreToCamelCase" value="false"/>
+        <setting name="mapUnderscoreToCamelCase" value="true"/>
     </settings>
     
     <typeAliases>
         <typeAlias type="com.ws.mybatis.model.User" alias="user"></typeAlias>
+        <typeAlias type="com.ws.mybatis.model.Shop" alias="shop"></typeAlias>
     </typeAliases>
     
     <typeHandlers>
@@ -51,6 +52,7 @@
 
     <mappers>
         <mapper resource="mybatis/mapper/UserMapper.xml"/>
+        <mapper resource="mybatis/mapper/ShopMapper.xml"/>
         <mapper resource="mybatis/mapper/test.xml"/>
         <!-- <package name="com.ws.mybatis.dao"/>-->
     </mappers>
