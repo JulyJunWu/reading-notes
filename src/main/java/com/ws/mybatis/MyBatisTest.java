@@ -16,8 +16,12 @@ import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import org.apache.ibatis.transaction.jdbc.JdbcTransactionFactory;
 import org.junit.Test;
 
-import java.io.InputStream;
 import java.io.Reader;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.Map;
 import java.util.Properties;
 
 /**
@@ -27,20 +31,27 @@ import java.util.Properties;
 @Slf4j
 public class MyBatisTest {
 
+    public static SqlSessionFactory sqlSessionFactory;
+
+    static {
+        try {
+            Reader reader = Resources.getResourceAsReader("mybatis/mybatis-config.xml");
+            sqlSessionFactory = new SqlSessionFactoryBuilder().build(reader);
+        } catch (Exception e) {
+            log.info("{}", e.getMessage());
+            System.exit(-1);
+        }
+    }
+
     /**
      * 配置创建
      */
     @Test
-    public void select() throws Exception {
-        InputStream inputStream = ClassLoader.getSystemClassLoader().getResourceAsStream("mybatis/mybatis-config.xml");
-        SqlSessionFactory sessionFactory = new SqlSessionFactoryBuilder().build(inputStream);
-
-        SqlSession session = sessionFactory.openSession();
+    public void select() {
+        SqlSession session = sqlSessionFactory.openSession();
         UserMapper mapper = session.getMapper(UserMapper.class);
         User user = mapper.selectById("199ae857118111eab6558c16457fff38");
-        System.out.println(user);
-        // 通过命名空间查询
-        Object result = session.selectOne(UserMapper.class.getName() + ".selectById", "199ae857118111eab6558c16457fff38");
+        log.info("{}", user);
         session.close();
     }
 
@@ -75,7 +86,7 @@ public class MyBatisTest {
 
         UserMapper mapper = sessionFactory.openSession().getMapper(UserMapper.class);
         User user = mapper.selectById("199ae857118111eab6558c16457fff38");
-        System.out.println(user);
+        log.info("{}", user);
     }
 
     /**
@@ -84,11 +95,9 @@ public class MyBatisTest {
      */
     @Test
     public void createWithoutMapper() {
-        SqlSessionFactory sessionFactory = new SqlSessionFactoryBuilder().build(ClassLoader.getSystemResourceAsStream("mybatis/mybatis-config.xml"));
-
-        SqlSession sqlSession = sessionFactory.openSession();
+        SqlSession sqlSession = sqlSessionFactory.openSession();
         Object selectOne = sqlSession.selectOne("test.selectById", "199ae857118111eab6558c16457fff38");
-        System.out.println(selectOne);
+        log.info("{}", selectOne);
     }
 
     /**
@@ -100,14 +109,14 @@ public class MyBatisTest {
     @Test
     public void testProperties() throws Exception {
         Reader reader = Resources.getResourceAsReader("mybatis/mybatis-config.xml");
-
         Properties properties = new Properties();
         properties.setProperty("custom", "3");
-        SqlSessionFactory sessionFactory = new SqlSessionFactoryBuilder().build(reader, properties);
 
-        String custom = sessionFactory.getConfiguration().getVariables().getProperty("custom");
+        sqlSessionFactory = new SqlSessionFactoryBuilder().build(reader, properties);
+
+        String custom = sqlSessionFactory.getConfiguration().getVariables().getProperty("custom");
         // 3
-        System.out.println(custom);
+        log.info("{}", custom);
 
     }
 
@@ -115,14 +124,14 @@ public class MyBatisTest {
      * 测试TypeHandler属性转换器
      */
     @Test
-    public void testTypeHandler() throws Exception {
-        Reader reader = Resources.getResourceAsReader("mybatis/mybatis-config.xml");
-        SqlSessionFactory sessionFactory = new SqlSessionFactoryBuilder().build(reader);
-
+    public void testTypeHandler() {
+        SqlSessionFactory sessionFactory = sqlSessionFactory;
         SqlSession sqlSession = sessionFactory.openSession();
+
         UserMapper mapper = sqlSession.getMapper(UserMapper.class);
         User user = mapper.selectById("199ae857118111eab6558c16457fff38");
-        System.out.println(user);
+        log.info("{}", user);
+
         user.setId("199ae857118111eab6558c164578ff98");
         user.setAge(88);
         user.setName("念念不忘");
@@ -131,6 +140,41 @@ public class MyBatisTest {
         mapper.insert(user);
         sqlSession.commit();
         sqlSession.close();
+    }
+
+    /**
+     * jdbc测试
+     *
+     * @throws Exception
+     */
+    @Test
+    public void jdbc() throws Exception {
+        Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/ws?useSSL=false", "root", "admin");
+        PreparedStatement statement = connection.prepareStatement("select * from user where id = ?");
+        statement.setString(1, "199ae857118111eab6558c16457fff98");
+        statement.execute();
+
+        ResultSet resultSet = statement.getResultSet();
+        while (resultSet.next()) {
+            String id = resultSet.getString("id");
+            String name = resultSet.getString("name");
+            int age = resultSet.getInt("age");
+            String sex = resultSet.getString("sex");
+            log.info("id -> {} , name -> {} , age -> {} , sex -> {}", new Object[]{id, name, age, sex});
+        }
+    }
+
+    /**
+     * 测试ObjectFactory
+     */
+    @Test
+    public void testObjectFactory() {
+        UserMapper userMapper = sqlSessionFactory.openSession().getMapper(UserMapper.class);
+        User user = userMapper.selectById("199ae857118111eab6558c16457fff98");
+        log.info("{}", user);
+
+        Map map = userMapper.selectMapById("199ae857118111eab6558c16457fff98");
+        log.info("{}",map);
 
     }
 }

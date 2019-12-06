@@ -13,7 +13,7 @@ import java.sql.SQLException;
  * @author JunWu
  * 字符串转枚举
  */
-public class StringToSexEnum extends BaseTypeHandler<SexEnum> {
+public class SexEnumTypeHandler extends BaseTypeHandler<SexEnum> {
     /**
      * 该函数的作用:
      * 当向数据库请求的时候,将数据从 枚举 转换成 对应的属性,否则插入数据库报错

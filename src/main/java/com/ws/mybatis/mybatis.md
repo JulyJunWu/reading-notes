@@ -9,6 +9,7 @@ mappers配置: 允许两种方式
 Configuration:
     Properties variables; 存放定义的Properties属性
     TypeHandlerRegistry typeHandlerRegistry; 存放已注册的TypeHandler
+    TypeAliasRegistry typeAliasRegistry; 存放已注册的别名
 SqlSessionFactory -> DefaultSqlSessionFactory
 SqlSession -> DefaultSqlSession
 TransactionIsolationLevel ; 事物的级别枚举
@@ -21,6 +22,7 @@ MapperProxy : 实现InvocationHandler接口,很明显JDK的动态代理
 MapperMethod
 MappedStatement
 ResultHandler
+ObjectFactory
 
 理论上mybatis是可以不需要Mapper接口的,因为可以通过命名空间+id进行访问;
     
@@ -59,8 +61,12 @@ typeAliases标签解析(注册别名服务):
 
 TypeHandlerRegistry : 存放注册的typeHandler
 typeHandlers: 对数据库返回数据进行类型转换为所需类型,如 String -> Enum;
-    使用: 如User类中包含一个枚举属性,那么注册一个该枚举属性转换器即可(TypeHandler),然后将转换器注册到mybatis中,这样就可以了;注册示例如下:
+    使用方式一: 如User类中包含一个枚举属性,那么注册一个该枚举属性转换器即可(TypeHandler),然后将转换器注册到mybatis中,这样就可以了;注册示例如下:
         <typeHandlers>
             <typeHandler handler="com.ws.mybatis.typehandler.StringToSexEnum" />
         </typeHandlers>
-    
+    使用方式二:
+        无需注册转换器,直接在xxxMapper.xml中 为字段指定typeHandler="com.xxx.xxxTypeHandler"即可
+        
+ObjectFactory -> DefaultObjectFactory
+    作用: 当MyBatis在构建一个结果返回的时候，都会使用ObjectFactory (对象工厂)去构建POJO接受对应的返回数据;

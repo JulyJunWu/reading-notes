@@ -12,7 +12,7 @@ public enum SexEnum {
 
     String sex;
 
-    private SexEnum(String sex) {
+    SexEnum(String sex) {
         this.sex = sex;
     }
 

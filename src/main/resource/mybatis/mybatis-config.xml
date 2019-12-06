@@ -19,8 +19,13 @@
         <typeAlias type="com.ws.mybatis.model.User" alias="user"></typeAlias>
     </typeAliases>
     <typeHandlers>
-        <typeHandler handler="com.ws.mybatis.typehandler.StringToSexEnum" />
+        <typeHandler handler="com.ws.mybatis.typehandler.SexEnumTypeHandler"/>
     </typeHandlers>
+
+    <objectFactory type="com.ws.mybatis.objectfactory.CustomObjectFactory">
+        <property name="hobby" value="eat and sleep"/>
+    </objectFactory>
+
     <environments default="development">
         <environment id="development">
             <transactionManager type="jdbc"/>
@@ -38,7 +43,7 @@
     <mappers>
         <mapper resource="mybatis/mapper/UserMapper.xml"/>
         <mapper resource="mybatis/mapper/test.xml"/>
-       <!-- <package name="com.ws.mybatis.dao"/>-->
+        <!-- <package name="com.ws.mybatis.dao"/>-->
     </mappers>
 </configuration>
 
