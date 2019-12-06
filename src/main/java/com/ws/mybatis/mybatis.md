@@ -70,3 +70,6 @@ typeHandlers: 对数据库返回数据进行类型转换为所需类型,如 Stri
         
 ObjectFactory -> DefaultObjectFactory
     作用: 当MyBatis在构建一个结果返回的时候，都会使用ObjectFactory (对象工厂)去构建POJO接受对应的返回数据;
+
+plugins(其实就是Interceptor): 拦截器
+    

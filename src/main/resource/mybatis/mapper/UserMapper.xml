@@ -8,16 +8,15 @@
     </sql>
 
     <select id="selectAll" resultType="user" parameterType="user">
-        select <include refid="allColumn"/>
-        from  user limit 10
+        select <include refid="allColumn"/>  from  user limit 0 , 10
     </select>
 
     <select id="selectById" parameterType="string" resultType="user">
-        select <include refid="allColumn"/> from user where id = #{id}
+        select <include refid="allColumn"/>   from user where id = #{id}
     </select>
 
     <select id="selectMapById" parameterType="string" resultType="map">
-        select <include refid="allColumn"/> from user where id = #{id}
+        select <include refid="allColumn"/>  from user where id = #{id}
     </select>
 
     <insert id="insert" parameterType="user">

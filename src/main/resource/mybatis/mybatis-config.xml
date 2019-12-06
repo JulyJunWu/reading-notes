@@ -15,9 +15,11 @@
         <setting name="defaultExecutorType" value="REUSE"/>
         <setting name="mapUnderscoreToCamelCase" value="false"/>
     </settings>
+    
     <typeAliases>
         <typeAlias type="com.ws.mybatis.model.User" alias="user"></typeAlias>
     </typeAliases>
+    
     <typeHandlers>
         <typeHandler handler="com.ws.mybatis.typehandler.SexEnumTypeHandler"/>
     </typeHandlers>
@@ -25,6 +27,13 @@
     <objectFactory type="com.ws.mybatis.objectfactory.CustomObjectFactory">
         <property name="hobby" value="eat and sleep"/>
     </objectFactory>
+    
+    <plugins>
+        <plugin interceptor="com.ws.mybatis.interceptor.StatisticsInterceptor">
+            <!--不启用该拦截器-->
+            <property name="enable" value="false"/>
+        </plugin>
+    </plugins>
 
     <environments default="development">
         <environment id="development">

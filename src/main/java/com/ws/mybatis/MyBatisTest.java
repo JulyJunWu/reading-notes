@@ -21,6 +21,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -175,6 +176,15 @@ public class MyBatisTest {
 
         Map map = userMapper.selectMapById("199ae857118111eab6558c16457fff98");
         log.info("{}",map);
+    }
 
+    /**
+     * 插件 plugins(其实就是Interceptor) 测试
+     */
+    @Test
+    public void testInterceptor(){
+        UserMapper userMapper = sqlSessionFactory.openSession().getMapper(UserMapper.class);
+        List<User> user = userMapper.selectAll(null);
+        log.info("{}",user.size());
     }
 }
