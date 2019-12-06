@@ -8,11 +8,10 @@
     </properties>
 
     <settings>
-        <!-- changes from the defaults for testing -->
         <!--源码最终还是将setting标签解析为Properties-->
-        <setting name="cacheEnabled" value="false"/>
+        <setting name="cacheEnabled" value="true"/>
         <setting name="useGeneratedKeys" value="true"/>
-        <setting name="defaultExecutorType" value="REUSE"/>
+        <setting name="defaultExecutorType" value="SIMPLE"/>
         <setting name="mapUnderscoreToCamelCase" value="true"/>
     </settings>
     

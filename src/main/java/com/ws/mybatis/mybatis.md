@@ -10,6 +10,7 @@ Configuration:
     Properties variables; 存放定义的Properties属性
     TypeHandlerRegistry typeHandlerRegistry; 存放已注册的TypeHandler
     TypeAliasRegistry typeAliasRegistry; 存放已注册的别名
+    boolean lazyLoadingEnabled; 延迟加载开关,默认为false
 SqlSessionFactory -> DefaultSqlSessionFactory
 SqlSession -> DefaultSqlSession
 TransactionIsolationLevel ; 事物的级别枚举
@@ -77,3 +78,20 @@ resultMap标签:
     一对一标签 : <association></association>
     一对多标签 : <collection></collection>
     鉴别器标签
+
+XMLMapperBuilder : 解析Mapper.xml文件,构造属性;    
+
+缓存:
+    默认开启一级缓存(一级缓存只是相对于同一个SqlSession而言);
+    二级缓存; 默认不开启; MappedStatement级别缓存
+       注意: 需要将SqlSession close或者commit才会缓存
+       开启方式,直接在需要缓存的配置中添加如下
+            <cache/>
+       注意:
+          1.映射语句文件中的所有select语句将会被缓存。
+          2.映射语句文件中的所有insert、update和delete 语句会刷新缓存。
+          3.缓存会使用默认的Least Recently Used (LRU,最近最少使用的)算法来收回。
+          4.根据时间表，比如No Flush Interval,(CNFI, 没有刷新间隔)，缓存不会以任何时间顺序来刷新。
+          5.缓存会存储列表集合或对象(无论查询方法返回什么)的1024个引用。
+          6.缓存会被视为是read/write (可读/可写)的缓存，意味着对象检索不是共享的，而且可以安全地被调用者修改，不干扰其他调用者或线程所做的潜在修改。
+

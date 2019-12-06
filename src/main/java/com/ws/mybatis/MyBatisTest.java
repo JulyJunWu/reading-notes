@@ -1,13 +1,12 @@
 package com.ws.mybatis;
 
-import com.ws.mybatis.dao.ShopMapper;
 import com.ws.mybatis.dao.UserMapper;
 import com.ws.mybatis.model.SexEnum;
-import com.ws.mybatis.model.Shop;
 import com.ws.mybatis.model.User;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.builder.xml.XMLConfigBuilder;
 import org.apache.ibatis.datasource.pooled.PooledDataSource;
+import org.apache.ibatis.executor.CachingExecutor;
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.mapping.Environment;
 import org.apache.ibatis.parsing.XNode;
@@ -23,9 +22,9 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author JunWu
@@ -177,16 +176,67 @@ public class MyBatisTest {
         log.info("{}", user);
 
         Map map = userMapper.selectMapById("199ae857118111eab6558c16457fff98");
-        log.info("{}",map);
+        log.info("{}", map);
     }
 
     /**
      * 插件 plugins(其实就是Interceptor) 测试
      */
     @Test
-    public void testInterceptor(){
+    public void testInterceptor() {
         UserMapper userMapper = sqlSessionFactory.openSession().getMapper(UserMapper.class);
         User user = userMapper.selectById("199adfb8118111eab6558c16457fff38");
-        log.info("{}",user.getName());
+        log.info("{}", user.getName());
+    }
+
+    /**
+     * 测试一级缓存
+     */
+    @Test
+    public void testCache() {
+        SqlSession sqlSession = sqlSessionFactory.openSession();
+
+        UserMapper mapper = sqlSession.getMapper(UserMapper.class);
+        User user = mapper.selectById("199adfb8118111eab6558c16457fff38");
+        User user2 = mapper.selectById("199adfb8118111eab6558c16457fff38");
+        // true,说明在同一个SqlSession中,多次获取相同参数 相同SQL,第二次以后都是从缓存中获取;
+        log.info("{}", user == user2);
+        // 清理缓存
+        sqlSession.clearCache();
+        User user3 = mapper.selectById("199adfb8118111eab6558c16457fff38");
+        log.info("{}", user == user3);
+
+        sqlSession.close();
+        sqlSession = sqlSessionFactory.openSession();
+        User user4 = sqlSession.getMapper(UserMapper.class).selectById("199adfb8118111eab6558c16457fff38");
+        // false,一级缓存失效
+        log.info("{}", user == user4);
+        sqlSession.close();
+        sqlSession.commit();
+    }
+
+    @Test
+    public void testSecondCache() throws Exception {
+
+        SqlSession sqlSession = sqlSessionFactory.openSession();
+        User user = sqlSession.getMapper(UserMapper.class).selectById("199adfb8118111eab6558c16457fff38");
+        // 只有在关闭或者commit时 才会缓存二级缓存;
+        sqlSession.close();
+
+        // 直接取二级缓存
+        /**
+         * @see CachingExecutor#query 取二级缓存源码
+         */
+        SqlSession sqlSession2 = sqlSessionFactory.openSession();
+        user = sqlSession2.getMapper(UserMapper.class).selectById("199adfb8118111eab6558c16457fff38");
+        sqlSession2.close();
+        // 97
+        log.info("age -> {}", user.getAge());
+
+        TimeUnit.SECONDS.sleep(10);
+        SqlSession session = sqlSessionFactory.openSession();
+        User user3 = session.getMapper(UserMapper.class).selectById("199adfb8118111eab6558c16457fff38");
+        // 1 -> 说明设置缓存过期时间有效果
+        log.info("age -> {}", user3.getAge());
     }
 }

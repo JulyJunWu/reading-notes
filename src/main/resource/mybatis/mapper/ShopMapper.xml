@@ -3,6 +3,8 @@
 
 <mapper namespace="com.ws.mybatis.dao.ShopMapper">
 
+    <cache></cache>
+
     <select id="selectShopByUserId" parameterType="string" resultType="shop">
         select * from shop where user_id = #{userId}
     </select>

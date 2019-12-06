@@ -3,6 +3,16 @@
 
 <mapper namespace="com.ws.mybatis.dao.UserMapper">
 
+    <!--开启二级缓存
+      flushInterval: 设置缓存刷新间隔时间; 单位毫秒
+      eviction : 设置缓存的策略,默认是LRU,当缓存超上限,则删除最少使用的
+      size : 设置可缓存的大小
+      readOnly : 是否只读 , 默认false
+      type : 缓存的类型 , 默认PERPETUAL,也就是使用PerpetualCache缓存类型
+    -->
+    <cache flushInterval="10000">
+    </cache>
+
     <resultMap id="baseResultMap" type="user">
         <id column="id" property="id"></id>
         <result column="name" property="name"></result>
@@ -11,13 +21,15 @@
         <!--
             级联查询一对一
             column: 级别查询所需参数,多个用逗号隔开
-            select: 查询命名空间, 命名空间 + ID 组成
+            select: 查询命名空间, 命名空间 + ID 组成;如果查询的是同个xml中的,那么直接配置ID即可;
             fetchType: 是否延迟加载 lazy : eager
          -->
-        <association property="shop" fetchType="lazy" column="id" select="com.ws.mybatis.dao.ShopMapper.selectOneByUserId" >
+        <association property="shop" fetchType="lazy" column="id"
+                     select="com.ws.mybatis.dao.ShopMapper.selectOneByUserId">
         </association>
         <!--    级别查询一对多    -->
-        <collection property="shopList" column="id" select="com.ws.mybatis.dao.ShopMapper.selectShopByUserId" fetchType="lazy">
+        <collection property="shopList" column="id" select="com.ws.mybatis.dao.ShopMapper.selectShopByUserId"
+                    fetchType="lazy">
         </collection>
     </resultMap>
 
@@ -29,7 +41,7 @@
         ${tableAlias}.id , ${tableAlias}.name
     </sql>
 
-    <select id="selectAll" resultType="user" parameterType="user">
+    <select id="selectAll" resultType="user" parameterType="user" useCache="true">
         select
         <include refid="customColumns">
             <property name="tableAlias" value="A"></property>
