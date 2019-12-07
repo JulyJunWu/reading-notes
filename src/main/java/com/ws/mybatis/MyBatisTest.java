@@ -219,7 +219,7 @@ public class MyBatisTest {
     public void testSecondCache() throws Exception {
 
         SqlSession sqlSession = sqlSessionFactory.openSession();
-        User user = sqlSession.getMapper(UserMapper.class).selectById("199adfb8118111eab6558c16457fff38");
+        User user = sqlSession.getMapper(UserMapper.class).selectById("199ae424118111eab6558c16457fff38");
         // 只有在关闭或者commit时 才会缓存二级缓存;
         sqlSession.close();
 
@@ -228,15 +228,19 @@ public class MyBatisTest {
          * @see CachingExecutor#query 取二级缓存源码
          */
         SqlSession sqlSession2 = sqlSessionFactory.openSession();
-        user = sqlSession2.getMapper(UserMapper.class).selectById("199adfb8118111eab6558c16457fff38");
+        user = sqlSession2.getMapper(UserMapper.class).selectById("199ae424118111eab6558c16457fff38");
         sqlSession2.close();
         // 97
         log.info("age -> {}", user.getAge());
 
         TimeUnit.SECONDS.sleep(10);
         SqlSession session = sqlSessionFactory.openSession();
-        User user3 = session.getMapper(UserMapper.class).selectById("199adfb8118111eab6558c16457fff38");
+        User user3 = session.getMapper(UserMapper.class).selectById("199ae424118111eab6558c16457fff38");
         // 1 -> 说明设置缓存过期时间有效果
         log.info("age -> {}", user3.getAge());
+
+        user.setId("199ae424118111eab6558c16457ff1212");
+        session.getMapper(UserMapper.class).insert(user);
+        session.commit();
     }
 }

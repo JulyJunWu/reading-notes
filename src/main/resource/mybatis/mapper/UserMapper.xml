@@ -3,14 +3,17 @@
 
 <mapper namespace="com.ws.mybatis.dao.UserMapper">
 
-    <!--开启二级缓存
+    <!--开启二级缓存 ： <cache/>
       flushInterval: 设置缓存刷新间隔时间; 单位毫秒
       eviction : 设置缓存的策略,默认是LRU,当缓存超上限,则删除最少使用的
       size : 设置可缓存的大小
       readOnly : 是否只读 , 默认false
       type : 缓存的类型 , 默认PERPETUAL,也就是使用PerpetualCache缓存类型
+
+      如果是自定义的缓存很多属性是不生效的;
     -->
-    <cache flushInterval="10000">
+    <!--自定义缓存类型,使用redis-->
+    <cache type="com.ws.mybatis.cache.RedisCache">
     </cache>
 
     <resultMap id="baseResultMap" type="user">

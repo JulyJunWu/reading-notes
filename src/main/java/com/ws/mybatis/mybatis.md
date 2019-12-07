@@ -83,8 +83,10 @@ XMLMapperBuilder : 解析Mapper.xml文件,构造属性;
 
 缓存:
     默认开启一级缓存(一级缓存只是相对于同一个SqlSession而言);
-    二级缓存; 默认不开启; MappedStatement级别缓存
-       注意: 需要将SqlSession close或者commit才会缓存
+    二级缓存; 默认全局开关是开启,但是还需要在mapper.xml文件中开启; MappedStatement级别缓存;
+    当开启二级缓存时,优先从二级缓存中获取Cache,如果获取为null,则通过委托查找,查找显示从一级缓存LocalCache中获取,
+如果获取不到,最后才是从数据库获取,然后放入一级缓存;二级缓存暂时放入到CachingExecutor中的tcm中,只有最终SqlSession执行了commit或者close,才会放入
+       注意: 需要将SqlSession close或者commit才会缓存到MS中
        开启方式,直接在需要缓存的配置中添加如下
             <cache/>
        注意:
@@ -94,4 +96,21 @@ XMLMapperBuilder : 解析Mapper.xml文件,构造属性;
           4.根据时间表，比如No Flush Interval,(CNFI, 没有刷新间隔)，缓存不会以任何时间顺序来刷新。
           5.缓存会存储列表集合或对象(无论查询方法返回什么)的1024个引用。
           6.缓存会被视为是read/write (可读/可写)的缓存，意味着对象检索不是共享的，而且可以安全地被调用者修改，不干扰其他调用者或线程所做的潜在修改。
-
+    查询缓存的源码:  
+        CachingExecutor.query:
+            1.从MappedStatement中获取缓存Cache
+            2.当开启了二级缓存:
+                2.1是否配置了flushCache=true,如果是则刷新缓存;
+                2.2从CachingExecutor中的tcm变量获取结果,其实就是一层层包装,最终还是从MS中的Cache中获取结果;
+                2.3结果不为null,直接返回结果;
+                2.4结果为null,执行第三步;
+                2.5将数据库查询结果存入tcm中暂缓(此时还未加入到缓存中)
+                2.6结果返回;
+            3.当未开启二级缓存,则直接委托查询;
+    放入缓存的源码:
+        DefaultSqlSession.close/commit : 执行sqlSession.close释放资源
+            TransactionalCacheManager.commit: 对map的values进行迭代,得到TransactionalCache
+                TransactionalCache.commit : 调用自身的flushPendingEntries
+                    TransactionalCache.flushPendingEntries: 最终使用持有MS的Cache引用进行放入缓存,这个时候才是正真的放入缓存;
+                    TransactionalCache.reset : 重置将加入缓存的数据,置空;
+CachingExecutor: 装饰模式
