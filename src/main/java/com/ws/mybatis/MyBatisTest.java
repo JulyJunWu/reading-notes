@@ -1,8 +1,10 @@
 package com.ws.mybatis;
 
+import com.ws.mybatis.cglib.UserServiceCglib;
 import com.ws.mybatis.dao.UserMapper;
 import com.ws.mybatis.model.SexEnum;
 import com.ws.mybatis.model.User;
+import com.ws.mybatis.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.builder.xml.XMLConfigBuilder;
 import org.apache.ibatis.datasource.pooled.PooledDataSource;
@@ -243,4 +245,27 @@ public class MyBatisTest {
         session.getMapper(UserMapper.class).insert(user);
         session.commit();
     }
+
+    /**
+     * 测试cglib代理
+     */
+    @Test
+    public void testCglib() {
+        UserService userService = new UserService();
+        UserServiceCglib serviceCglib = new UserServiceCglib();
+        UserService instance = (UserService) serviceCglib.getInstance(userService);
+        instance.getUser();
+    }
+
+    /**
+     * 测试@Param注解
+     */
+    @Test
+    public void testParamAnnotation() {
+        UserMapper mapper = sqlSessionFactory.openSession().getMapper(UserMapper.class);
+        User user = mapper.selectByParams(null, "ws", 18);
+        log.info("{}", user);
+    }
+
 }
+

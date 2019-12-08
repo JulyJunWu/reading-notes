@@ -44,6 +44,7 @@
         ${tableAlias}.id , ${tableAlias}.name
     </sql>
 
+    <!-- select|update|delete|insert 标签就是 对应一个MappedStatement对象-->
     <select id="selectAll" resultType="user" parameterType="user" useCache="true">
         select
         <include refid="customColumns">
@@ -87,6 +88,22 @@
         </set>
         where id = #{id}
     </update>
+
+    <select id="selectByParams" resultType="user">
+        select * from user
+        <where>
+            <if test="id != null">
+                and id = #{id}
+            </if>
+            <if test="arg1 != null">
+                and name = #{arg1}
+            </if>
+            <if test="age != null">
+                and age = #{age}
+            </if>
+        </where>
+        limit 1
+    </select>
 
 
 </mapper>

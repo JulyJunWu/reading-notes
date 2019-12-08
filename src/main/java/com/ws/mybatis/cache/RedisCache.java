@@ -47,6 +47,7 @@ public class RedisCache implements Cache {
     @Override
     public void clear() {
         RedisUtils.clear(id);
+        size = 0;
     }
 
     @Override

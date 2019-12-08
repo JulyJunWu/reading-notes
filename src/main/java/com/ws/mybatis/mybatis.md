@@ -10,7 +10,8 @@ Configuration:
     Properties variables; 存放定义的Properties属性
     TypeHandlerRegistry typeHandlerRegistry; 存放已注册的TypeHandler
     TypeAliasRegistry typeAliasRegistry; 存放已注册的别名
-    boolean lazyLoadingEnabled; 延迟加载开关,默认为false
+    boolean lazyLoadingEnabled; 延迟加载开关,默认为false;
+    Map<String, MappedStatement> mappedStatements; 
 SqlSessionFactory -> DefaultSqlSessionFactory
 SqlSession -> DefaultSqlSession
 TransactionIsolationLevel ; 事物的级别枚举
@@ -24,6 +25,7 @@ MapperMethod
 MappedStatement
 ResultHandler
 ObjectFactory
+SqlCommandType ：sql的类型,如select|update|insert|delete等
 
 理论上mybatis是可以不需要Mapper接口的,因为可以通过命名空间+id进行访问;
     
@@ -114,3 +116,27 @@ XMLMapperBuilder : 解析Mapper.xml文件,构造属性;
                     TransactionalCache.flushPendingEntries: 最终使用持有MS的Cache引用进行放入缓存,这个时候才是正真的放入缓存;
                     TransactionalCache.reset : 重置将加入缓存的数据,置空;
 CachingExecutor: 装饰模式
+
+@Param 注解解析:
+    ParamNameResolver: 解析注解并存储相关值
+        SortedMap<Integer, String> names; 存储解析后的值,一个有序的map
+        初次解析
+            ParamNameResolver.ParamNameResolver : 在构造函数中解析
+            1.如果参数含有@Param注解,那么获取该注解的value值,以参数索引位置为key,value值为value存入map中(这个map是TreeMap);
+            2.如果未找到@Param注解,那么获取参数的名称作为值,同样以参数索引位置为key,参数的名称为value存入map中;
+                注意:: 在mybatis的解析得出的参数名称最终是以 arg +　参数索引下标　作为参数名称的，例如：　
+                get(String id , int age) , 则解析得出 id -> arg0, age -> arg1 ;
+        最终解析:初次解析只是为最终解析作铺垫工作,最终的参数是以此处为准;
+            MapperMethod.execute
+                MethodSignature.convertArgsToSqlCommandParam
+                    ParamNameResolver.getNamedParams
+            1.创建一个新的map,取名为param
+            2.迭代初次解析中的map(就是变了为names的SortedMap)
+                2.1.以初步解析的map的value为key,以参数的值为value(真正的传入的参数实际值),存入param中,
+                2.2.在以param + (参数索引下标 + 1) 作为 key,然后将参数的值作为value,存入param中;
+        例子: 以getUser(@Param("id") String id , int age): 假设id -> "888" , age -> 18;
+              那么最终解析得出的map如下:
+                map.put("id","888")            
+                map.put("param1","888")            
+                map.put("agr1",18)            
+                map.put("param2",18)            

@@ -28,7 +28,7 @@ public class HessianUtils {
             hessian2Output.flush();
             return arrayOutputStream.toByteArray();
         } catch (Exception e) {
-            log.info("序列化异常,{}", e.getMessage());
+            log.error("序列化异常,{}", e.getMessage());
             return null;
         }
     }
