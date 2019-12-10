@@ -14,18 +14,36 @@ Configuration:
     Map<String, MappedStatement> mappedStatements; 
 SqlSessionFactory -> DefaultSqlSessionFactory
 SqlSession -> DefaultSqlSession
+StatementHandler:作用是使用数据库的Statement (PreparedStatement) 执行操作，它是四大对象的核心，起到承上启下的作用。
+ParameterHandler -> DefaultParameterHandler  用于SQL对参数的处理。
+ResultHandler: 是进行最后数据集(ResultSet) 的封装返回处理的。
 TransactionIsolationLevel ; 事物的级别枚举
 ExecutorType: Executor类型,枚举有三个值:SIMPLE,REUSE,BATCH; 默认是SIMPLE, 如果是批量的sql语句的话BATCH类型更实用;
-Executor ->  BatchExecutor  -->  ExecutorType.SIMPLE
+Executor ->  BatchExecutor  -->  ExecutorType.SIMPLE    -- 执行器重用语句和批量更新，它是针对批量专用的执行器。
              ReuseExecutor  -->  ExecutorType.REUSE
-             SimpleExecutor --> ExecutorType.BATCH
+             SimpleExecutor -->  ExecutorType.BATCH
 MapperProxyFactory : 生成Mapper接口代理类
 MapperProxy : 实现InvocationHandler接口,很明显JDK的动态代理
 MapperMethod
 MappedStatement
-ResultHandler
 ObjectFactory
 SqlCommandType ：sql的类型,如select|update|insert|delete等
+OgnlCache : 
+SqlNode : sql解析成的对象,比如where标签有对应的WhereSqlNode
+WhereSqlNode: 采用装饰模式
+TextSqlNode: 
+SystemMetaObject
+SqlSessionFactoryBean
+SqlSessionTemplate
+MapperFactoryBean : 配置单个Mapper接口
+MapperScannerConfigurer: 批量扫描包下的Mapper接口
+插件对以下对象有作用(四大对象):
+    Executor,ParameterHandler,ResultSetHandler,StatementHandler
+
+解析mapper.xml中的${}:
+    DynamicSqlSource.getBoundSql
+        MixedSqlNode.apply
+            TextSqlNode.apply
 
 理论上mybatis是可以不需要Mapper接口的,因为可以通过命名空间+id进行访问;
     
@@ -80,7 +98,7 @@ resultMap标签:
     一对一标签 : <association></association>
     一对多标签 : <collection></collection>
     鉴别器标签
-
+select|delete|update 标签不能含有resultType和resultMap属性,否则报错
 XMLMapperBuilder : 解析Mapper.xml文件,构造属性;    
 
 缓存:
@@ -139,4 +157,36 @@ CachingExecutor: 装饰模式
                 map.put("id","888")            
                 map.put("param1","888")            
                 map.put("agr1",18)            
-                map.put("param2",18)            
+                map.put("param2",18)     
+                
+sql的预编译和参数设置:
+    SimpleExecutor.doQuery     
+        SimpleExecutor.prepareStatement   
+            StatementHandler.prepare      :SQL预编译,最后一般调用connection.prepareStatement(sql)
+            StatementHandler.parameterize : sql 参数设置, 底层调用TypeHandler接口的setParameter执行JDK原生PreparedStatement.set(index + 1 , 具体值);   
+            
+org.springframework.transaction.annotation.Propagation : 事物传播方式枚举
+spring事物传播方式:
+    传播行为                                    含义                                                          备注
+    PROPAGATION_REQUIRED           如果存在一个事务，则支持当前事务。如果没有事务则开启          这是 Spring默认的传播行为
+    PROPAGATION_SUPPORTS            如果存在一一个事务，则支持当前事务。如果没有事务，
+                                    则非事务的执行;
+    PROPAGATION_MANDATORY           如果已经存在一一个事务，则支持当前事务。如果没有
+                                    一个活动的事务，则抛出异常
+    PROPAGATION_REQUIRES_NEW        总是开启一个新的事务。如果一一个事务已经存在，则
+                                    将这个存在的事务挂起
+    PROPAGATION_NOT_SUPPORTED       总是非事务地执行，并挂起任何存在的事务
+    PROPAGATION_NEVER               总是非事务地执行，如果存在一一个活动事务，则抛出异常
+    PROPAGATION_NESTED              如果一个活动的事务存在，则运行在-一个嵌套的事务
+                                    中:如果没有活动事务，则按照TransactionDefinition.
+                                    PROPAGATION REQUIRED属性执行
+                    
+
+                               
+
+    
+    
+    
+
+
+            

@@ -12,18 +12,24 @@ import org.apache.ibatis.executor.CachingExecutor;
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.mapping.Environment;
 import org.apache.ibatis.parsing.XNode;
+import org.apache.ibatis.reflection.MetaObject;
+import org.apache.ibatis.reflection.SystemMetaObject;
 import org.apache.ibatis.session.Configuration;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import org.apache.ibatis.transaction.jdbc.JdbcTransactionFactory;
 import org.junit.Test;
+import org.mybatis.spring.SqlSessionTemplate;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import java.io.Reader;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
@@ -188,6 +194,7 @@ public class MyBatisTest {
     public void testInterceptor() {
         UserMapper userMapper = sqlSessionFactory.openSession().getMapper(UserMapper.class);
         User user = userMapper.selectById("199adfb8118111eab6558c16457fff38");
+        List<User> users = userMapper.selectAll(null);
         log.info("{}", user.getName());
     }
 
@@ -267,5 +274,49 @@ public class MyBatisTest {
         log.info("{}", user);
     }
 
+    /**
+     * 测试mybatis工具 MetaObject
+     */
+    @Test
+    public void testMetaObject() {
+        User user = new User();
+        user.setName("ws");
+        user.setId("678");
+        HashMap<Object, Object> map = new HashMap<>(2);
+        map.put("user", user);
+
+        MetaObject metaObject = SystemMetaObject.forObject(map);
+        Object value = metaObject.getValue("user.name");
+
+        log.info("user.name -> {}", value);
+
+        metaObject = SystemMetaObject.forObject(user);
+        value = metaObject.getValue("name");
+        log.info("name -> {}", value);
+    }
+
+    /**
+     * spring整合mybatis
+     */
+    @Test
+    public void testSpringMybatis() {
+        ClassPathXmlApplicationContext applicationContext = new ClassPathXmlApplicationContext("mybatis/spring-mybatis.xml");
+        SqlSessionFactory sqlSessionFactory = (SqlSessionFactory) applicationContext.getBean("sqlSessionFactory");
+        SqlSession sqlSession = sqlSessionFactory.openSession();
+        UserMapper mapper = sqlSession.getMapper(UserMapper.class);
+        User user = mapper.selectById("199adfb8118111eab6558c16457fff38");
+        log.info("{}", user);
+    }
+
+    /**
+     * SqlSessionTemplate
+     */
+    @Test
+    public void testSqlSessionTemplate() {
+        ClassPathXmlApplicationContext applicationContext = new ClassPathXmlApplicationContext("mybatis/spring-mybatis.xml");
+        SqlSessionTemplate sessionTemplate = applicationContext.getBean(SqlSessionTemplate.class);
+        Object one = sessionTemplate.selectOne("test.selectById", "199adfb8118111eab6558c16457fff38");
+        log.info("{}", one);
+    }
 }
 

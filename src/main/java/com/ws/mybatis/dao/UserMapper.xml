@@ -16,7 +16,7 @@
         select <include refid="allColumn"/> from user where id = #{id}
     </select>
 
-    <insert id="insert" parameterType="user">
+    <insert id="insert" parameterType="user" resultType="int">
         insert into user values (#{id},#{name},#{age},#{sex})
     </insert>
 
@@ -39,8 +39,4 @@
         </set>
         where id = #{id}
     </update>
-
-
-
-
 </mapper>

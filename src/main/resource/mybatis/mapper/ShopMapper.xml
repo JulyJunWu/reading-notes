@@ -13,4 +13,8 @@
         select * from shop where user_id = #{userId}
     </select>
 
+    <insert id="insertShop" parameterType="shop">
+        insert into shop values (#{id},#{userId},#{shopName},#{price})
+    </insert>
+
 </mapper>

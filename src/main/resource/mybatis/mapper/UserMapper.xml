@@ -95,7 +95,7 @@
             <if test="id != null">
                 and id = #{id}
             </if>
-            <if test="arg1 != null">
+            <if test="arg1 != null"> <!--arg1也可以用param2替换-->
                 and name = #{arg1}
             </if>
             <if test="age != null">
