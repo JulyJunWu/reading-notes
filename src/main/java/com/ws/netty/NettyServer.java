@@ -7,8 +7,6 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.util.AttributeKey;
-import io.netty.util.ReferenceCountUtil;
 
 import java.nio.charset.Charset;
 
@@ -19,15 +17,12 @@ public class NettyServer {
 
     public static void main(String[] args) throws Exception {
 
-        ChannelOption<Object> option = ChannelOption.valueOf("HAHA");
-        AttributeKey<Object> name = AttributeKey.valueOf("name");
-
-        NioEventLoopGroup work = new NioEventLoopGroup();
         NioEventLoopGroup boss = new NioEventLoopGroup(1);
+        NioEventLoopGroup work = new NioEventLoopGroup();
 
         ServerBootstrap bootstrap = new ServerBootstrap();
         bootstrap.group(boss, work).channel(NioServerSocketChannel.class)
-                .childHandler(new ChannelInitial()).childOption(option, "6666").childAttr(name, "8888");
+                .childHandler(new ChannelInitial());
 
         ChannelFuture channelFuture = bootstrap.bind(8888);
         channelFuture.channel().closeFuture().sync();
@@ -49,13 +44,10 @@ class ChannelInitial extends ChannelInitializer<SocketChannel> {
 class ResponseHandler extends SimpleChannelInboundHandler<ByteBuf> {
     @Override
     protected void channelRead0(ChannelHandlerContext channelHandlerContext, ByteBuf msg) throws Exception {
-        try {
-            System.out.println(msg.toString(Charset.defaultCharset()));
-            Channel channel = channelHandlerContext.channel();
-            channel.writeAndFlush(Unpooled.wrappedBuffer("收到!".getBytes()));
-        } finally {
-            ReferenceCountUtil.release(msg);
-        }
+        //  此处无需释放ByteBuf,其父类会处理释放问题
+        System.out.println(msg.toString(Charset.defaultCharset()));
+        Channel channel = channelHandlerContext.channel();
+        channel.writeAndFlush(Unpooled.wrappedBuffer("收到!".getBytes()));
     }
 
     @Override
