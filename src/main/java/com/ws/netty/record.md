@@ -198,6 +198,12 @@ ChannelId -> DefaultChannelId
 DefaultChannelPipeline
 ChannelInboundHandlerAdapter
 ChannelHandlerContext
+ByteBufAllocator
+ChannelFutureListener
+ChannelFuture
+ByteToMessageDecoder -> ReplayingDecoder
+ChannelOutboundHandlerAdapter
+MessageToByteEncoder
 
         
         
