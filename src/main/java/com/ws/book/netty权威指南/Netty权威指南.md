@@ -56,7 +56,7 @@ I/O多路复用:
 数据报;如FixedLengthFrameDecoder;
     (2)将回车换行符作为消息结束符，例如FTP协议，这种方式在文本协议中应用比较广泛;如:DelimiterBasedFrameDecoder
     (3)将特殊的分隔符作为消息的结束标志，回车换行符就是一种特殊的结束分隔符;
-    (4)通过在消息头中定义长度字段来标识消息的总长度。
+    (4)通过在消息头中定义长度字段来标识消息的总长度。LengthFieldBasedFrameDecoder解码,LengthFieldPrepender编码
 
     
 JAVA序列化的缺陷:
