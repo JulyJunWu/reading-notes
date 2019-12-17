@@ -3,6 +3,7 @@ package com.ws.book.netty权威指南.messagepack;
 import com.ws.book.netty权威指南.NettyUtils;
 import com.ws.book.netty权威指南.model.Message;
 import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.ReplayingDecoder;
@@ -17,7 +18,7 @@ import java.util.List;
 public class MessagePackServer {
 
     public static void main(String[] args) throws Exception {
-        NettyUtils.startNettyServer(6666, new ParseByteBufHandler(), new MsgPackDecoder());
+        NettyUtils.startNettyServer(6666,new ChannelHandler[]{ new ParseByteBufHandler(), new MsgPackDecoder()},null,null);
     }
 
     public static class ParseByteBufHandler extends ReplayingDecoder {

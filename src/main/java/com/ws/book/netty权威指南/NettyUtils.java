@@ -10,7 +10,9 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import org.apache.commons.lang.ArrayUtils;
 
+import java.lang.reflect.Constructor;
 import java.net.SocketAddress;
 
 /**
@@ -25,7 +27,7 @@ public class NettyUtils {
     /**
      * 启动服务
      */
-    public static void startNettyServer(int port, ChannelHandler... channelHandlers) {
+    public static void startNettyServer(int port, ChannelHandler[] channelHandlers, Object[] args, Object[] argsType) {
         NioEventLoopGroup boss = null;
         NioEventLoopGroup work = null;
         try {
@@ -37,8 +39,20 @@ public class NettyUtils {
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         protected void initChannel(SocketChannel ch) throws Exception {
-                            ChannelPipeline pipeline = ch.pipeline();
-                            pipeline.addLast(channelHandlers);
+                            if (!ArrayUtils.isEmpty(channelHandlers)) {
+                                ChannelPipeline pipeline = ch.pipeline();
+                                int index = 0;
+                                for (ChannelHandler channelHandler : channelHandlers) {
+                                    Object[] params = (Object[]) args[index];
+                                    Class[] aClass = (Class[]) argsType[index];
+                                    Constructor<? extends ChannelHandler> constructor = channelHandler.getClass().getDeclaredConstructor(aClass);
+                                    if (!constructor.isAccessible()) {
+                                        constructor.setAccessible(true);
+                                    }
+                                    pipeline.addLast(constructor.newInstance(params));
+                                    index++;
+                                }
+                            }
                         }
                     }).bind(port).sync();
 

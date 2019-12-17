@@ -2,6 +2,7 @@ package com.ws.book.netty权威指南;
 
 import com.ws.book.netty权威指南.messagepack.MessagePackClient;
 import com.ws.book.netty权威指南.messagepack.MessagePackServer;
+import io.netty.channel.ChannelHandler;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.handler.codec.LengthFieldPrepender;
 import org.junit.Test;
@@ -17,8 +18,8 @@ public class NettyTest {
 
     /**
      * 测试使用
-     * LengthFieldBasedFrameDecoder
-     * LengthFieldPrepender
+     * LengthFieldBasedFrameDecoder  用于对进栈数据解码
+     * LengthFieldPrepender          用于对出栈数据进行编码
      * <p>
      * 用于自定义消息长度 + 数据
      */
@@ -26,16 +27,9 @@ public class NettyTest {
     public void testLength() throws Exception {
         LengthFieldBasedFrameDecoder lengthFieldBasedFrameDecoder = new LengthFieldBasedFrameDecoder(65525, 0, 2, 0, 2);
         MessagePackServer.MsgPackDecoder2 msgPackDecoder2 = new MessagePackServer.MsgPackDecoder2();
-        new Thread(
-                () -> {
-                    NettyUtils.startNettyServer(6666, lengthFieldBasedFrameDecoder, msgPackDecoder2
-                    );
-                }).start();
+        new Thread(() -> NettyUtils.startNettyServer(6666, new ChannelHandler[]{lengthFieldBasedFrameDecoder, msgPackDecoder2},null,null)).start();
 
         TimeUnit.SECONDS.sleep(2);
-
         NettyUtils.startNettyClient(new InetSocketAddress(6666), new LengthFieldPrepender(2), new MessagePackClient.SendMessageHandler2());
     }
-
-
 }
