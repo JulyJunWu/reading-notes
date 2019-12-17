@@ -7,7 +7,6 @@ import io.netty.channel.*;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.stream.ChunkedFile;
 import io.netty.handler.stream.ChunkedWriteHandler;
-import io.netty.util.AsciiString;
 import io.netty.util.CharsetUtil;
 import io.netty.util.internal.StringUtil;
 import org.junit.Test;
@@ -29,20 +28,11 @@ public class HttpFileServer {
 
     @Test
     public void fileServer() {
+        Class<? extends ChannelHandler>[] aClass = new Class[]{HttpRequestDecoder.class, HttpObjectAggregator.class, HttpResponseEncoder.class, ChunkedWriteHandler.class, HttpFileServerHandler.class};
+        Object[] args = new Object[]{null, new Object[]{65535}, null, null, null};
+        Object[] argsType = new Object[]{null, new Class[]{int.class}, null, null, null};
 
-        HttpRequestDecoder requestDecoder = new HttpRequestDecoder();
-        HttpObjectAggregator objectAggregator = new HttpObjectAggregator(65535);
-
-        HttpResponseEncoder responseEncoder = new HttpResponseEncoder();
-        ChunkedWriteHandler chunkedWriteHandler = new ChunkedWriteHandler();
-
-        HttpFileServerHandler httpFileServerHandler = new HttpFileServerHandler();
-
-        Object [] args = new Object[]{null,new Object[]{65535},null,null,null};
-        Object [] argsType = new Object[]{null,new Class[]{int.class},null,null,null};
-
-        NettyUtils.startNettyServer(6688, new ChannelHandler[]{requestDecoder, objectAggregator, responseEncoder, chunkedWriteHandler, httpFileServerHandler},args,argsType);
-
+        NettyUtils.startNettyServer(6688, aClass, args, argsType);
     }
 
     /**
@@ -55,7 +45,7 @@ public class HttpFileServer {
         protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest msg) throws Exception {
             boolean keepAlive = isKeepAlive(msg);
 
-            boolean validate = validate(ctx, msg,keepAlive);
+            boolean validate = validate(ctx, msg, keepAlive);
             if (!validate) {
                 return;
             }
@@ -139,7 +129,7 @@ public class HttpFileServer {
             }
         }
 
-        private boolean validate(ChannelHandlerContext ctx, FullHttpRequest msg,boolean keepAlive) {
+        private boolean validate(ChannelHandlerContext ctx, FullHttpRequest msg, boolean keepAlive) {
             if (!msg.decoderResult().isSuccess()) {
                 sendError(ctx, HttpResponseStatus.BAD_REQUEST, keepAlive);
                 return false;

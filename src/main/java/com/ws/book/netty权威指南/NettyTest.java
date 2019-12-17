@@ -25,9 +25,11 @@ public class NettyTest {
      */
     @Test
     public void testLength() throws Exception {
-        LengthFieldBasedFrameDecoder lengthFieldBasedFrameDecoder = new LengthFieldBasedFrameDecoder(65525, 0, 2, 0, 2);
-        MessagePackServer.MsgPackDecoder2 msgPackDecoder2 = new MessagePackServer.MsgPackDecoder2();
-        new Thread(() -> NettyUtils.startNettyServer(6666, new ChannelHandler[]{lengthFieldBasedFrameDecoder, msgPackDecoder2},null,null)).start();
+        Class<? extends ChannelHandler>[] aClass = new Class[]{LengthFieldBasedFrameDecoder.class, MessagePackServer.MsgPackDecoder2.class};
+        Object[] args = new Object[]{null, new Object[]{65535, 0, 2, 0, 2}, null, null, null};
+        Object[] argsType = new Object[]{null, new Class[]{int.class, int.class, int.class, int.class, int.class}, null, null, null};
+
+        new Thread(() -> NettyUtils.startNettyServer(6666, aClass, args, argsType)).start();
 
         TimeUnit.SECONDS.sleep(2);
         NettyUtils.startNettyClient(new InetSocketAddress(6666), new LengthFieldPrepender(2), new MessagePackClient.SendMessageHandler2());

@@ -27,7 +27,7 @@ public class NettyUtils {
     /**
      * 启动服务
      */
-    public static void startNettyServer(int port, ChannelHandler[] channelHandlers, Object[] args, Object[] argsType) {
+    public static void startNettyServer(int port, Class<? extends ChannelHandler>[] channelHandlers, Object[] args, Object[] argsType) {
         NioEventLoopGroup boss = null;
         NioEventLoopGroup work = null;
         try {
@@ -42,10 +42,10 @@ public class NettyUtils {
                             if (!ArrayUtils.isEmpty(channelHandlers)) {
                                 ChannelPipeline pipeline = ch.pipeline();
                                 int index = 0;
-                                for (ChannelHandler channelHandler : channelHandlers) {
+                                for (Class<? extends ChannelHandler> channelHandler : channelHandlers) {
                                     Object[] params = (Object[]) args[index];
                                     Class[] aClass = (Class[]) argsType[index];
-                                    Constructor<? extends ChannelHandler> constructor = channelHandler.getClass().getDeclaredConstructor(aClass);
+                                    Constructor<? extends ChannelHandler> constructor = channelHandler.getDeclaredConstructor(aClass);
                                     if (!constructor.isAccessible()) {
                                         constructor.setAccessible(true);
                                     }

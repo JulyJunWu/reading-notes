@@ -18,7 +18,10 @@ import java.util.List;
 public class MessagePackServer {
 
     public static void main(String[] args) throws Exception {
-        NettyUtils.startNettyServer(6666,new ChannelHandler[]{ new ParseByteBufHandler(), new MsgPackDecoder()},null,null);
+
+        Class<? extends ChannelHandler>[] aClass = new Class[]{ParseByteBufHandler.class, MsgPackDecoder.class};
+
+        NettyUtils.startNettyServer(6666, aClass, null, null);
     }
 
     public static class ParseByteBufHandler extends ReplayingDecoder {
