@@ -57,7 +57,7 @@ public class NettyClient {
             future.channel().closeFuture().sync();
         } finally {
             ++retry;
-            log.info("客户端程序重新创建,时间[],重试次数[]", LocalDateTime.now(), retry);
+            log.info("客户端程序重新创建,时间[{}],重试次数[{}]", LocalDateTime.now(), retry);
             //重新创建一个新客户端
             executorService.execute(() -> {
                 try {
