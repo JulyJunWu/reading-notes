@@ -177,7 +177,18 @@ netty读取数据代码:
     io.netty.channel.nio.AbstractNioByteChannel.NioByteUnsafe.read
 
 
+##Boss线程与work线程切换 , boss线程监听accept事件后到此处将连接交给Work线程处理,该Channel注册到work上
+io.netty.bootstrap.ServerBootstrap.ServerBootstrapAcceptor.channelRead
+##订阅事件(通过该函数改变监听的事件) 
+io.netty.channel.nio.AbstractNioChannel.doBeginRead
+##BOSS接收的请求事件是ACCEPT操作,读取数据是通过UnSafe接口的实现类io.netty.channel.nio.AbstractNioMessageChannel.NioMessageUnsafe
+##通过该实现类的read操作读取数据,最终是通过NIO的ServerSocketChannel.accept得到SocketChannel对象,最终创建NioSocketChannel对象;
+##WORK线程接收BOSS线程所创建的NioSocketChannel对象,将该对象注册到到selector中,事件是READ操作,后续对该NioSocketChannel对象的读操作与BOSS
+##线程是不一样的;
 
+### NioServerSocketChannel和NioSocketChannel对象都拥有一个unSafe对象,但是实现类不一样,此对象是真正对数据进行读取和写入;
+### NioServerSocketChannel创建的时候也会同时在内部创建原生ServerSocketChannel,并设置监听的事件是OP_ACCEPT(16)
+### NioSocketChannel创建的时候同时在内部创建原生SocketChannel对象,并设置监听的事件为OP_READ(1);
 
 
 

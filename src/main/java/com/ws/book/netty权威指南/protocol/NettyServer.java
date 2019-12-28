@@ -8,6 +8,7 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.timeout.ReadTimeoutHandler;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.TimeUnit;
 
@@ -15,12 +16,15 @@ import java.util.concurrent.TimeUnit;
  * @author JunWu
  * 自定义协议栈服务端
  */
+@Slf4j
 public class NettyServer {
 
     public void start() throws Exception {
 
-        NioEventLoopGroup boss = new NioEventLoopGroup();
+        NioEventLoopGroup boss = new NioEventLoopGroup(1);
         NioEventLoopGroup work = new NioEventLoopGroup();
+
+        log.info("boss[{}], work[{}]",boss,work);
 
         try {
             ServerBootstrap bootstrap = new ServerBootstrap();
@@ -29,7 +33,7 @@ public class NettyServer {
                         @Override
                         protected void initChannel(SocketChannel ch) throws Exception {
                             ChannelPipeline pipeline = ch.pipeline();
-                            //解码(处理入栈请求)  参数1:最大长度 , 参数2
+                            //解码(处理入栈请求)  参数1:最大长度 , 参数2:表示消息长度的开始位置 参数3:表示消息长度的结束位置
                             NettyMessageDecoder decoder = new NettyMessageDecoder(1024 * 1024, 4, 4);
                             decoder.setName("server");
                             pipeline.addLast("NettyMessageDecoder", decoder);
