@@ -189,6 +189,40 @@ io.netty.channel.nio.AbstractNioChannel.doBeginRead
 ### NioServerSocketChannel和NioSocketChannel对象都拥有一个unSafe对象,但是实现类不一样,此对象是真正对数据进行读取和写入;
 ### NioServerSocketChannel创建的时候也会同时在内部创建原生ServerSocketChannel,并设置监听的事件是OP_ACCEPT(16)
 ### NioSocketChannel创建的时候同时在内部创建原生SocketChannel对象,并设置监听的事件为OP_READ(1);
+###NioServerSocketChannel内部的unSafe接口使用的实现类是NioMessageUnsafe,读写,注册等操作由该实现类负责;
+###NioSocketChannel内部的unSafe接口使用的实现类是NioSocketChannelUnsafe,读写,注册等操作由该实现类负责;
+
+##NioSocketChannel添加自定义的handler的时机: 
+    ChannelPipeline.fireChannelRead ##通过NioServerSocketChannel的pipeline的fireChannelRead进行触发所有的入栈Hanlder
+    ServerBootstrapAcceptor.channelRead ##该对象是属于pipeline中第二个handler(如果没有指定非一添加其他handler的话) 
+        1.为NioSocketChannel添加用户自定义的childHandler;
+        2.将该NioSocketChannle注册到work线程中(childGroup)
+##修改监听事件的时机:
+  ##首次连接成功后,触发pipeline.channelActive(),最后在HeadContext中调整
+  
+##ByteBuffer它的主要缺点如下:
+   (1) ByteBuffer长度固定，一且分配完成，它的容量不能动态扩展和收缩，当需要编 码的POJO对象大于ByteBuffer的容量时，会发生
+索引越界异常;
+   (2) ByteBuffer 只有一个标识位置的指针position,读写的时候需要手工调用flip(和 rewind()等，使用者必须小心谨慎地处理这些
+API,否则很容易导致程序处理失败:
+   (3) ByteBuffer的API功能有限，一些高级和实用的特性它不支持，需要使用者自己编程实现。
+
+##从内存分配的角度看，ByteBuf可以 分为两类。
+   (1)堆内存( HeapByteBuf) 字节缓冲区:特点是内存的分配和回收速度快，可以被JVM自动回收;缺点就是如果进行Socket 的I/O读写，
+需要额外做一次内存复制，将堆内存对应的缓冲区复制到内核Channel中，性能会有一定程度的下降。
+   (2)直接内存(DirectByteBuf) 字节缓冲区:非堆内存，它在堆外进行内存分配，相比于堆内存，它的分配和回收速度会慢一些，但是
+将它写入或者从Socket Channel中读取时，由于少了一次内存复制，速度比堆内存快。
+    正是因为各有利弊，所以Netty提供了多种ByteBuf供开发者使用，经验表明，ByteBuf的最佳实践是在I/O通信线程的读写缓冲区使用
+DirectByteBuf,后端业务消息的编解码模块使用HeapByteBuf,这样组合可以达到性能最优。
+
+##netty的引用计数 io.netty.buffer.AbstractReferenceCountedByteBuf
+   通过java的AtomicIntegerFieldUpdater对变量refCnt进行原子性操作;
+   refCnt: 初始值为1
+
+io.netty.buffer.PoolArena : netty对象池
+
+
+    
 
 
 
