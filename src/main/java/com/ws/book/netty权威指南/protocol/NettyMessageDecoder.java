@@ -9,7 +9,7 @@ import java.util.Map;
 
 /**
  * @author JunWu
- * 对字节码解码
+ * 对字节解码
  */
 public class NettyMessageDecoder extends LengthFieldBasedFrameDecoder {
 
@@ -32,7 +32,6 @@ public class NettyMessageDecoder extends LengthFieldBasedFrameDecoder {
         if (frame == null) {
             return null;
         }
-
         NettyMessage message = new NettyMessage();
         Header header = new Header();
         header.setCrcCode(frame.readInt());

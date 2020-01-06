@@ -31,7 +31,7 @@ public class HeartBeatResHandler extends SimpleChannelInboundHandler<NettyMessag
             String clientIp = ctx.channel().remoteAddress().toString();
             LocalDateTime temp = lastTime;
             lastTime = LocalDateTime.now();
-            log.info("客户端[{}]心跳请求成功,本次时间 -> {},上次时间 ->{}", new Object[]{clientIp, lastTime, temp});
+            log.info("客户端[{}] 心跳请求成功,本次时间[{}],上次时间[{}]", new Object[]{clientIp, lastTime, temp});
             NettyMessage res = buildHeartBeatReq();
             ctx.writeAndFlush(res);
         } else {

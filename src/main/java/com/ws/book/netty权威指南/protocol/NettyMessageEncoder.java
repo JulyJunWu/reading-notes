@@ -23,7 +23,6 @@ public class NettyMessageEncoder extends MessageToByteEncoder<NettyMessage> {
 
     @Override
     protected void encode(ChannelHandlerContext ctx, NettyMessage msg, ByteBuf sendBuf) throws Exception {
-
         if (msg == null || msg.getHeader() == null) {
             throw new Exception("参数缺失!");
         }

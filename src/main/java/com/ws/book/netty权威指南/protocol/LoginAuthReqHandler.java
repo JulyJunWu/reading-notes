@@ -23,7 +23,7 @@ public class LoginAuthReqHandler extends SimpleChannelInboundHandler<NettyMessag
                 log.error("客户端登录失败!");
                 ctx.close();
             } else {
-                log.error("客户端登录成功! {}",msg);
+                log.info("客户端登录成功! [{}]",msg);
                 ctx.fireChannelRead(msg);
             }
         } else {

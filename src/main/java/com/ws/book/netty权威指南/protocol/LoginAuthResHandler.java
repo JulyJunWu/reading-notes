@@ -27,14 +27,14 @@ public class LoginAuthResHandler extends SimpleChannelInboundHandler<NettyMessag
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, NettyMessage msg) throws Exception {
-        log.info("当前客户端数量->{}", ALREADY_CONNECTION.size());
+        log.info("当前客户端数量[{}]", ALREADY_CONNECTION.size());
         if (msg.getHeader() != null && msg.getHeader().getType() == MessageType.LOGIN_REQ.getType()) {
             String ipString = ctx.channel().remoteAddress().toString();
-            log.info("客户端[{}]请求登录,时间->{}", ipString, LocalDateTime.now());
+            log.info("客户端[{}]请求登录,时间[{}]", ipString, LocalDateTime.now());
             NettyMessage resMsg;
             if (ALREADY_CONNECTION.containsKey(ipString)) {
                 resMsg = buildResMessage((byte) -1);
-                log.info("客户端[{}]登录失败,时间->{}", ipString, LocalDateTime.now());
+                log.info("客户端[{}]登录失败,时间[{}]", ipString, LocalDateTime.now());
             } else {
                 boolean isOk = false;
                 InetSocketAddress inetSocketAddress = (InetSocketAddress) ctx.channel().remoteAddress();
@@ -49,7 +49,7 @@ public class LoginAuthResHandler extends SimpleChannelInboundHandler<NettyMessag
 
                 if (isOk) {
                     ALREADY_CONNECTION.put(ipString, Boolean.TRUE);
-                    log.info("客户端[{}]验证成功,时间->{}", ipString, LocalDateTime.now());
+                    log.info("客户端[{}]验证成功,时间[{}]", ipString, LocalDateTime.now());
                 }
             }
             ctx.writeAndFlush(resMsg);

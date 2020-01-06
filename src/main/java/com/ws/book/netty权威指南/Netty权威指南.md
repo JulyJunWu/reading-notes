@@ -221,12 +221,29 @@ DirectByteBuf,后端业务消息的编解码模块使用HeapByteBuf,这样组合
 
 io.netty.buffer.PoolArena : netty对象池
 
+##ChannelInitializer
+ 该接口的作用是将多个handler注册到ChannelPipeline中,当NioSocketChannel第一次注册时,会调用handlerAdded执行initChannel函数,当添加handler完成后,
+ 将该ChannelHandlerContext从ChannelPipeline中移除;
 
-    
+###SelectedSelectionKeySet 优化类(虽然实现了Set,但是重写成使用数组了)
+在NioEventLoop中使用该类替换Selector实现类(SelectorImpl)中的selectedKeys,publicSelectedKeys两个属性
+源码位置:io.netty.channel.nio.NioEventLoop.openSelector()
 
+###NioEventLoop中task类型 : 1.普通taskQueue队列  2.定时task队列scheduledTaskQueue
+   定时任务中即将执行的任务会从scheduledTaskQueue队列弹出并加入到普通task队列中taskQueue串行执行;
+   具体源码: SingleThreadEventExecutor.runAllTasks(long)
+                fetchFromScheduledTaskQueue
 
+##是否使用优化后的Selector的keySet,默认是优化,使用SelectedSelectionKeySet
+io.netty.noKeySetOptimization: DISABLE_KEYSET_OPTIMIZATION
+源码位置:io.netty.channel.nio.NioEventLoop.openSelector()
 
+##解决netty空轮训的BUG的阀值,默认是512,当轮训次数超过此值,就认为出现轮训BUG,则建立新的一个Selector替换旧的;
+io.netty.selectorAutoRebuildThreshold: SELECTOR_AUTO_REBUILD_THRESHOLD
+源码位置: io.netty.channel.nio.NioEventLoop.select(boolean oldWakenUp)
 
+###netty使用Thread实现类FastThreadLocalThread代替原生Thread,最重要的其实是InternalThreadLocalMap
 
-
+###GlobalEventExecutor
+###FastThreadLocal
 
