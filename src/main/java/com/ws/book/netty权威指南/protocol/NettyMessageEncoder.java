@@ -18,7 +18,12 @@ public class NettyMessageEncoder extends MessageToByteEncoder<NettyMessage> {
     private String name;
 
     public NettyMessageEncoder() throws Exception {
+        this(null);
+    }
+
+    public NettyMessageEncoder(String name) throws Exception {
         this.objectEncoder = new ObjectEncoder();
+        this.name = name;
     }
 
     @Override

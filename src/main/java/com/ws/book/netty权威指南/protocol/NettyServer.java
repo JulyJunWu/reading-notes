@@ -24,7 +24,7 @@ public class NettyServer {
         NioEventLoopGroup boss = new NioEventLoopGroup(1);
         NioEventLoopGroup work = new NioEventLoopGroup();
 
-        log.info("boss[{}], work[{}]",boss,work);
+        log.info("boss[{}], work[{}]", boss, work);
 
         try {
             ServerBootstrap bootstrap = new ServerBootstrap();
@@ -34,13 +34,9 @@ public class NettyServer {
                         protected void initChannel(SocketChannel ch) throws Exception {
                             ChannelPipeline pipeline = ch.pipeline();
                             //解码(处理入栈请求)  参数1:最大长度 , 参数2:表示消息长度的开始位置 参数3:表示消息长度的结束位置
-                            NettyMessageDecoder decoder = new NettyMessageDecoder(1024 * 1024, 4, 4);
-                            decoder.setName("server");
-                            pipeline.addLast("NettyMessageDecoder", decoder);
+                            pipeline.addLast("NettyMessageDecoder", new NettyMessageDecoder("server", 1024 * 1024, 4, 4));
                             //编码(处理出栈请求)
-                            NettyMessageEncoder encoder = new NettyMessageEncoder();
-                            encoder.setName("server");
-                            pipeline.addLast("NettyMessageEncoder", encoder);
+                            pipeline.addLast("NettyMessageEncoder", new NettyMessageEncoder("server"));
                             //超时处理
                             pipeline.addLast("ReadTimeoutHandler", new ReadTimeoutHandler(50L, TimeUnit.SECONDS));
                             //登录认证响应

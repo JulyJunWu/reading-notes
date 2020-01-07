@@ -22,8 +22,13 @@ public class NettyMessageDecoder extends LengthFieldBasedFrameDecoder {
     private String name;
 
     public NettyMessageDecoder(int maxFrameLength, int lengthFieldOffset, int lengthFieldLength) throws Exception {
+        this(null,maxFrameLength,lengthFieldOffset,lengthFieldLength);
+    }
+
+    public NettyMessageDecoder(String name,int maxFrameLength, int lengthFieldOffset, int lengthFieldLength) throws Exception {
         super(maxFrameLength, lengthFieldOffset, lengthFieldLength);
         this.objectDecoder = new ObjectDecoder();
+        this.name = name;
     }
 
     @Override

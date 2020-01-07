@@ -2,6 +2,9 @@ package com.ws.book.netty权威指南.protocol;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.channel.group.ChannelGroup;
+import io.netty.channel.group.DefaultChannelGroup;
+import io.netty.util.concurrent.GlobalEventExecutor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;
@@ -17,9 +20,13 @@ public class HeartBeatResHandler extends SimpleChannelInboundHandler<NettyMessag
      */
     private LocalDateTime lastTime;
 
+    /**
+     * 用于存放所有NioSocketChannel,可以用于对所有Channel广播等操作!
+     */
+    private ChannelGroup channelGroup = new DefaultChannelGroup("存放客户端Channel",GlobalEventExecutor.INSTANCE);
+
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, NettyMessage msg) throws Exception {
-
         if (msg == null) {
             return;
         }
@@ -50,5 +57,13 @@ public class HeartBeatResHandler extends SimpleChannelInboundHandler<NettyMessag
         header.setType(MessageType.HEARTBEAT_RES.getType());
         message.setHeader(header);
         return message;
+    }
+
+    @Override
+    public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        // 只会触发一次
+        channelGroup.add(ctx.channel());
+        log.info("当前group channel数量[{}]",channelGroup.size());
+        super.channelActive(ctx);
     }
 }

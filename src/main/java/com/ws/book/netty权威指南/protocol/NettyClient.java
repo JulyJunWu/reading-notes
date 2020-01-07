@@ -40,13 +40,9 @@ public class NettyClient {
                         protected void initChannel(SocketChannel ch) throws Exception {
                             ChannelPipeline pipeline = ch.pipeline();
                             //消息解码
-                            NettyMessageDecoder decoder = new NettyMessageDecoder(1024 * 1024, 4, 4);
-                            decoder.setName("client");
-                            pipeline.addLast("NettyMessageDecoder", decoder);
+                            pipeline.addLast("NettyMessageDecoder", new NettyMessageDecoder("client", 1024 * 1024, 4, 4));
                             //消息编码
-                            NettyMessageEncoder encoder = new NettyMessageEncoder();
-                            encoder.setName("client");
-                            pipeline.addLast("NettyMessageEncoder", encoder);
+                            pipeline.addLast("NettyMessageEncoder", new NettyMessageEncoder("client"));
                             //登录认证处理
                             pipeline.addLast("LoginAuthReqHandler", new LoginAuthReqHandler());
                             //心跳处理
