@@ -19,13 +19,20 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class NettyServer {
 
+    public static long FREE_MEMORY;
+    public static long TOTAL_MEMORY;
+    public static long MAX_MEMORY;
+
     public void start() throws Exception {
-
+        //不使用堆外内存
+        // System.setProperty("io.netty.noPreferDirect","true");
+        Runtime runtime = Runtime.getRuntime();
+        long freeMemory = FREE_MEMORY = runtime.freeMemory();
+        long totalMemory = TOTAL_MEMORY = runtime.totalMemory();
+        long maxMemory = MAX_MEMORY = runtime.maxMemory();
+        log.info("begin start netty server || totalMemory[{}],maxMemory[{}],freeMemory[{}]", new Object[]{totalMemory, maxMemory, freeMemory});
         NioEventLoopGroup boss = new NioEventLoopGroup(1);
-        NioEventLoopGroup work = new NioEventLoopGroup();
-
-        log.info("boss[{}], work[{}]", boss, work);
-
+        NioEventLoopGroup work = new NioEventLoopGroup(1);
         try {
             ServerBootstrap bootstrap = new ServerBootstrap();
             ChannelFuture future = bootstrap.group(boss, work).channel(NioServerSocketChannel.class)
@@ -45,6 +52,17 @@ public class NettyServer {
                             pipeline.addLast("HeartBeatResHandler", new HeartBeatResHandler());
                         }
                     }).bind(5566).sync();
+            long remainMemory = runtime.freeMemory();
+            // 使用了多少字节内存
+            long usageB = TOTAL_MEMORY - remainMemory;
+            // 使用了多少K内存
+            long usageK = usageB / 1024;
+            // 使用了多少M内存
+            long usageM = usageK / 1024;
+            freeMemory = remainMemory;
+            totalMemory = runtime.totalMemory();
+            maxMemory = runtime.maxMemory();
+            log.info("after netty server start|| totalMemory[{}],maxMemory[{}],freeMemory[{}],使用字节数[{}].使用K数[{}],使用M数[{}]", new Object[]{totalMemory, maxMemory, freeMemory, usageB, usageK, usageM});
             future.channel().closeFuture().sync();
         } finally {
             boss.shutdownGracefully();

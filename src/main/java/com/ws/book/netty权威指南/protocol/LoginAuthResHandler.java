@@ -1,5 +1,6 @@
 package com.ws.book.netty权威指南.protocol;
 
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class LoginAuthResHandler extends SimpleChannelInboundHandler<NettyMessage> {
     /**
      * 存放已认证通过的客户端连接
+     * 可以使用ChannelGroup替代
      */
     private static Map<String, Boolean> ALREADY_CONNECTION = new ConcurrentHashMap<>();
 

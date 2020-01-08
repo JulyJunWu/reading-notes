@@ -246,4 +246,23 @@ io.netty.selectorAutoRebuildThreshold: SELECTOR_AUTO_REBUILD_THRESHOLD
 
 ###GlobalEventExecutor
 ###FastThreadLocal
+##PoolThreadCache
+##PoolArena
+##Chunk
 
+                                         +---------------------------+
+                                         | Completed successfully    |
+                                         +---------------------------+
+                                    +---->      isDone() = true      |
+    +--------------------------+    |    |   isSuccess() = true      |
+    |        Uncompleted       |    |    +===========================+
+    +--------------------------+    |    | Completed with failure    |
+    |      isDone() = false    |    |    +---------------------------+
+    |   isSuccess() = false    |----+---->      isDone() = true      |
+    | isCancelled() = false    |    |    |       cause() = non-null  |
+    |       cause() = null     |    |    +===========================+
+    +--------------------------+    |    | Completed by cancellation |
+                                    |    +---------------------------+
+                                    +---->      isDone() = true      |
+                                         | isCancelled() = true      |
+                                         +---------------------------+
