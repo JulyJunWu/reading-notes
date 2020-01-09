@@ -12,7 +12,11 @@ import io.netty.handler.codec.ByteToMessageDecoder;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.util.List;
+
+import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE;
 
 /**
  * @Description:
@@ -20,6 +24,29 @@ import java.util.List;
  * @Date: 2019/10/11 0011 13:02
  */
 public class Test implements Serializable {
+
+
+    @org.junit.Test
+    public void date() throws Exception {
+
+        LocalDateTime now = LocalDateTime.now();
+
+        String format = now.format(DateTimeFormatter.BASIC_ISO_DATE);
+        System.out.println(format);
+        format = now.format(ISO_LOCAL_DATE);
+        System.out.println(format);
+        format = now.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+        System.out.println(format);
+
+        DateTimeFormatter dateTimeFormatter = new DateTimeFormatterBuilder()
+                .parseCaseInsensitive()
+                .append(ISO_LOCAL_DATE)
+                .appendLiteral(' ')
+                .append(DateTimeFormatter.ISO_LOCAL_TIME).toFormatter();
+
+        format = now.format(dateTimeFormatter);
+        System.out.println(format);
+    }
 
 
     @org.junit.Test

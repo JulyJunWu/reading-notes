@@ -2,14 +2,9 @@ package com.ws.book.netty权威指南.protocol;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.channel.group.ChannelGroup;
-import io.netty.channel.group.DefaultChannelGroup;
-import io.netty.util.concurrent.GlobalEventExecutor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author JunWu
@@ -22,38 +17,9 @@ public class HeartBeatResHandler extends SimpleChannelInboundHandler<NettyMessag
      */
     private LocalDateTime lastTime;
 
-    /**
-     * 用于存放所有NioSocketChannel,可以用于对所有Channel广播等操作!
-     */
-    private ChannelGroup channelGroup = new DefaultChannelGroup("存放客户端Channel", GlobalEventExecutor.INSTANCE);
-
-    public static final AtomicBoolean GLOBAL_SCHEDULE = new AtomicBoolean();
-
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, NettyMessage msg) throws Exception {
-        if (msg == null) {
-            return;
-        }
-        if (!GLOBAL_SCHEDULE.get()) {
-            if (GLOBAL_SCHEDULE.compareAndSet(false, true)) {
-                Runtime runtime = Runtime.getRuntime();
-                // 开启一个定时任务用来计算内存使用率
-                ctx.executor().scheduleWithFixedDelay(() -> {
-                    long freeMemory = runtime.freeMemory();
-                    long totalMemory = runtime.totalMemory();
-                    long maxMemory = runtime.maxMemory();
-
-                    //已使用多少字节
-                    long usedByte = NettyServer.TOTAL_MEMORY - freeMemory;
-                    long usedK = usedByte / 1024;
-                    long usedM = usedK / 1024;
-                    log.info("maxMemory[{}][{}],totalMemory[{}][{}],freeMemory[{}],已使用[{}B],已使用[{}K],已使用[{}M]",
-                            new Object[]{NettyServer.MAX_MEMORY, maxMemory, NettyServer.TOTAL_MEMORY, totalMemory
-                                    , freeMemory, usedByte, usedK, usedM});
-                }, 1L, 10L, TimeUnit.SECONDS);
-            }
-        }
-
+        assert msg != null;
         /**
          * 只处理心跳请求
          */
@@ -80,14 +46,6 @@ public class HeartBeatResHandler extends SimpleChannelInboundHandler<NettyMessag
         header.setType(MessageType.HEARTBEAT_RES.getType());
         message.setHeader(header);
         return message;
-    }
-
-    @Override
-    public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        // 只会触发一次
-        channelGroup.add(ctx.channel());
-        log.info("当前group channel数量[{}]", channelGroup.size());
-        super.channelActive(ctx);
     }
 
     /**

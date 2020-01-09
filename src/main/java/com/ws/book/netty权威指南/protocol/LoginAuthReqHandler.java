@@ -13,6 +13,18 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class LoginAuthReqHandler extends SimpleChannelInboundHandler<NettyMessage> {
+    /**
+     * 登录认证请求消息
+     */
+    private static NettyMessage reqLogMsg;
+
+    static {
+        reqLogMsg = new NettyMessage();
+        Header header = new Header();
+        header.setType(MessageType.LOGIN_REQ.getType());
+        reqLogMsg.setHeader(header);
+    }
+
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, NettyMessage msg) throws Exception {
 
@@ -23,7 +35,7 @@ public class LoginAuthReqHandler extends SimpleChannelInboundHandler<NettyMessag
                 log.error("客户端登录失败!");
                 ctx.close();
             } else {
-                log.info("客户端登录成功! [{}]",msg);
+                log.info("客户端登录成功! [{}]", msg);
                 ctx.fireChannelRead(msg);
             }
         } else {
@@ -39,11 +51,7 @@ public class LoginAuthReqHandler extends SimpleChannelInboundHandler<NettyMessag
      */
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        NettyMessage nettyMessage = new NettyMessage();
-        Header header = new Header();
-        header.setType(MessageType.LOGIN_REQ.getType());
-        nettyMessage.setHeader(header);
-        ctx.writeAndFlush(nettyMessage);
+        ctx.writeAndFlush(reqLogMsg);
     }
 
     @Override

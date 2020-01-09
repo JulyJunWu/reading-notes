@@ -1,14 +1,16 @@
 package com.ws.book.netty权威指南.protocol;
 
-import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.channel.group.ChannelGroup;
+import io.netty.channel.group.DefaultChannelGroup;
+import io.netty.util.concurrent.GlobalEventExecutor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetSocketAddress;
 import java.time.LocalDateTime;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author JunWu
@@ -16,11 +18,13 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Slf4j
 public class LoginAuthResHandler extends SimpleChannelInboundHandler<NettyMessage> {
+
+    public static final AtomicBoolean GLOBAL_SCHEDULE = new AtomicBoolean();
+
     /**
-     * 存放已认证通过的客户端连接
-     * 可以使用ChannelGroup替代
+     * 用于存放所有NioSocketChannel,可以用于对所有Channel广播等操作!
      */
-    private static Map<String, Boolean> ALREADY_CONNECTION = new ConcurrentHashMap<>();
+    private static ChannelGroup channelGroup = new DefaultChannelGroup("存放客户端Channel", GlobalEventExecutor.INSTANCE);
 
     /**
      * 白名单
@@ -29,12 +33,11 @@ public class LoginAuthResHandler extends SimpleChannelInboundHandler<NettyMessag
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, NettyMessage msg) throws Exception {
-        log.info("当前客户端数量[{}]", ALREADY_CONNECTION.size());
         if (msg.getHeader() != null && msg.getHeader().getType() == MessageType.LOGIN_REQ.getType()) {
             String ipString = ctx.channel().remoteAddress().toString();
             log.info("客户端[{}]请求登录,时间[{}]", ipString, LocalDateTime.now());
             NettyMessage resMsg;
-            if (ALREADY_CONNECTION.containsKey(ipString)) {
+            if (channelGroup.contains(ctx.channel())) {
                 resMsg = buildResMessage((byte) -1);
                 log.info("客户端[{}]登录失败,时间[{}]", ipString, LocalDateTime.now());
             } else {
@@ -48,9 +51,8 @@ public class LoginAuthResHandler extends SimpleChannelInboundHandler<NettyMessag
                     }
                 }
                 resMsg = isOk ? buildResMessage(new Byte((byte) 0)) : buildResMessage(new Byte((byte) -1));
-
                 if (isOk) {
-                    ALREADY_CONNECTION.put(ipString, Boolean.TRUE);
+                    channelGroup.add(ctx.channel());
                     log.info("客户端[{}]验证成功,时间[{}]", ipString, LocalDateTime.now());
                 }
             }
@@ -77,9 +79,40 @@ public class LoginAuthResHandler extends SimpleChannelInboundHandler<NettyMessag
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         String socketAddress = ctx.channel().remoteAddress().toString();
-        ALREADY_CONNECTION.remove(socketAddress);
         ctx.fireExceptionCaught(cause);
         ctx.close();
-        log.info("移除客户端[{}],剩余客户端数量[{}]", socketAddress, ALREADY_CONNECTION.size());
+        log.info("移除客户端[{}],剩余客户端数量[{}]", socketAddress, channelGroup.size());
+    }
+
+    @Override
+    public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        this.startScheduleTask(ctx);
+        super.channelActive(ctx);
+    }
+
+    /**
+     * 开启一个定时任务统计内存
+     *
+     * @param ctx
+     */
+    private void startScheduleTask(ChannelHandlerContext ctx) {
+        if (!GLOBAL_SCHEDULE.get()) {
+            if (GLOBAL_SCHEDULE.compareAndSet(false, true)) {
+                Runtime runtime = Runtime.getRuntime();
+                // 开启一个定时任务用来计算内存使用率
+                ctx.executor().scheduleWithFixedDelay(() -> {
+                    long freeMemory = runtime.freeMemory();
+                    long totalMemory = runtime.totalMemory();
+                    long maxMemory = runtime.maxMemory();
+                    //已使用多少字节
+                    long usedByte = NettyServer.TOTAL_MEMORY - freeMemory;
+                    long usedK = usedByte / 1024;
+                    long usedM = usedK / 1024;
+                    log.info("maxMemory[{}][{}],totalMemory[{}][{}],freeMemory[{}],已使用[{}B],已使用[{}K],已使用[{}M],全局连接数[{}]",
+                            new Object[]{NettyServer.MAX_MEMORY, maxMemory, NettyServer.TOTAL_MEMORY, totalMemory
+                                    , freeMemory, usedByte, usedK, usedM, channelGroup.size()});
+                }, 1L, 60L, TimeUnit.SECONDS);
+            }
+        }
     }
 }

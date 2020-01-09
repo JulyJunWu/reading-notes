@@ -32,7 +32,7 @@ public class NettyServer {
         long maxMemory = MAX_MEMORY = runtime.maxMemory();
         log.info("begin start netty server || totalMemory[{}],maxMemory[{}],freeMemory[{}]", new Object[]{totalMemory, maxMemory, freeMemory});
         NioEventLoopGroup boss = new NioEventLoopGroup(1);
-        NioEventLoopGroup work = new NioEventLoopGroup(1);
+        NioEventLoopGroup work = new NioEventLoopGroup();
         try {
             ServerBootstrap bootstrap = new ServerBootstrap();
             ChannelFuture future = bootstrap.group(boss, work).channel(NioServerSocketChannel.class)
@@ -45,7 +45,7 @@ public class NettyServer {
                             //编码(处理出栈请求)
                             pipeline.addLast("NettyMessageEncoder", new NettyMessageEncoder("server"));
                             //超时处理
-                            pipeline.addLast("ReadTimeoutHandler", new ReadTimeoutHandler(50L, TimeUnit.SECONDS));
+                            pipeline.addLast("ReadTimeoutHandler", new ReadTimeoutHandler(60L, TimeUnit.SECONDS));
                             //登录认证响应
                             pipeline.addLast("LoginAuthResHandler", new LoginAuthResHandler());
                             //心跳响应

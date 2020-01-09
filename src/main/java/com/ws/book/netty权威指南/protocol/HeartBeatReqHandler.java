@@ -20,26 +20,22 @@ public class HeartBeatReqHandler extends SimpleChannelInboundHandler<NettyMessag
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, NettyMessage msg) throws Exception {
-
-        if (msg != null) {
-            switch (MessageType.toMessageType(msg.getHeader().getType())) {
-                case LOGIN_RES:
-                    if (heartBeat != null) {
-                        heartBeat.cancel(true);
-                        heartBeat = null;
-                    }
-                    heartBeat = ctx.executor().scheduleAtFixedRate(new SendHeartBeat(ctx), 10L, 10L, TimeUnit.SECONDS);
-                    break;
-                case HEARTBEAT_RES:
-                    LocalDateTime temp = lastTime;
-                    lastTime = LocalDateTime.now();
-                    log.info("心跳成功,时间[{}],上次时间[{}],消息体[{}]", new Object[]{lastTime, temp,msg.getBody()});
-                    break;
-                default:
-                    ctx.fireChannelRead(msg);
-            }
-        } else {
-            ctx.fireChannelRead(msg);
+        assert msg != null;
+        switch (MessageType.toMessageType(msg.getHeader().getType())) {
+            case LOGIN_RES:
+                if (heartBeat != null) {
+                    heartBeat.cancel(true);
+                    heartBeat = null;
+                }
+                heartBeat = ctx.executor().scheduleAtFixedRate(new SendHeartBeat(ctx), 30L, 30L, TimeUnit.SECONDS);
+                break;
+            case HEARTBEAT_RES:
+                LocalDateTime temp = lastTime;
+                lastTime = LocalDateTime.now();
+                log.info("心跳成功,时间[{}],上次时间[{}],消息体[{}]", new Object[]{lastTime, temp, msg.getBody()});
+                break;
+            default:
+                ctx.fireChannelRead(msg);
         }
     }
 

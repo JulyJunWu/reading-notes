@@ -18,8 +18,9 @@ import java.nio.charset.Charset;
 /**
  * @author Jun
  * data  2019-08-18 12:56
+ *  netty模拟http请求
  */
-public class NettyServerDemo1 {
+public class NettyHttpServer {
     public static void main(String[] args) throws Exception {
         //事件循环组 ,就是两个线程 一个是转发,一个是真正处理
         NioEventLoopGroup boss = new NioEventLoopGroup();
@@ -44,8 +45,12 @@ class MessageHandler extends SimpleChannelInboundHandler<HttpObject> {
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, HttpObject o) throws Exception {
-
-        ByteBuf content = Unpooled.copiedBuffer("Hello world !", Charset.defaultCharset());
+        String uri = null;
+        if (o instanceof DefaultHttpRequest){
+            DefaultHttpRequest request = (DefaultHttpRequest) o;
+            uri = request.uri();
+        }
+        ByteBuf content = Unpooled.copiedBuffer(uri == null ? "Hello world !" : uri, Charset.defaultCharset());
 
         FullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, content);
 
