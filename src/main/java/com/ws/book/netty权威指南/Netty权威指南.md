@@ -266,3 +266,49 @@ io.netty.selectorAutoRebuildThreshold: SELECTOR_AUTO_REBUILD_THRESHOLD
                                     +---->      isDone() = true      |
                                          | isCancelled() = true      |
                                          +---------------------------+
+                                         
+###netty使用的设计模式:
+1.单例模式
+     DefaultEventExecutorChooserFactory(也是个单例工厂)
+     DefaultSelectStrategyFactory
+     ReadTimeoutException
+     MqttEncoder
+2.策略模式:
+    线程选择器: io.netty.util.concurrent.DefaultEventExecutorChooserFactory.newChooser
+                impl : PowerOfTwoEventExecutorChooser/GenericEventExecutorChooser 根据参数的不同选择对应选择器
+3.责任链模式
+   ChannelPipeline : 作用在每一个读取数据上
+4.迭代器模式
+   NioEventLoopGroup  : 线程组,同时也实现Iterable接口
+5.观察者模式
+   典型的就是ChannelFuture(ChannelFutureListener),也可以说是一种回调
+6.工厂模式
+  DefaultEventExecutorChooserFactory/ReflectiveChannelFactory
+7.模板模式
+  抽象父类定义流程,具体实现由子类实现;
+    ByteToMessageDecoder(如抽象方法decode)
+    ChannelInitializer(如抽象方法initChannel)
+    AbstractBootstrap抽象类的init,具体实现由ServerBootstrap/Bootstrap实现;
+    SimpleChannelInboundHandler抽象类中的channelRead0抽象方法
+8.装饰模式
+  装饰类与对装饰类实现同一个类/接口,对装饰类进行扩展,如 
+    WrappedByteBuf
+    DefaultRunnableDecorator
+9.适配器模式
+  ChannelInboundHandlerAdapter/ChannelOutboundHandlerAdapter
+10.构造器模式/建造者模式
+  ServerBootstrap/Bootstrap
+11.Reactor模式
+   netty的线程模型就是典型的Reactor模式,主从Reactor多线程模型
+   Reactor单线程模型:
+        new NioEventLoopGroup(1);
+   Reactor多线程模型:
+        NioEventLoopGroup boss =  new NioEventLoopGroup(1);// Acceptor仅负责接受连接事件
+        NioEventLoopGroup work =  new NioEventLoopGroup();// 负责I/O的读写事件
+   主从Reactor多线程模型:
+        NioEventLoopGroup boss =  new NioEventLoopGroup();// Acceptor仅负责接受连接事件,bind多个端口进行监听连接事件
+        NioEventLoopGroup work =  new NioEventLoopGroup();// 负责I/O的读写事件
+12.facade模式:
+   jdk中的SocketChannel和ServerSocketChannel没有统一的堆外提供的接口,开发难度大
+   netty提供统一的对外提供的Channel供开发者使用,将NioServerSocketChannel和NioSocketChannel统一起来;
+   如: io.netty.channel.Channel
