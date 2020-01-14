@@ -312,3 +312,8 @@ io.netty.selectorAutoRebuildThreshold: SELECTOR_AUTO_REBUILD_THRESHOLD
    jdk中的SocketChannel和ServerSocketChannel没有统一的堆外提供的接口,开发难度大
    netty提供统一的对外提供的Channel供开发者使用,将NioServerSocketChannel和NioSocketChannel统一起来;
    如: io.netty.channel.Channel
+ 
+TCP参数: ChannelOption类参数列表
+    SO_RCVBUF和SO_SNDBUF:通常建议值为128KB或者256KB;
+    SO_TCPNODELAY: NAGLE算法通过将缓冲区内的小封包自动相连，组成较大的封包，阻止大量小封包的发送阻塞网络，从而提高网络应
+用效率。但是对于时延敏感的应用场景需要关闭该优化算法;

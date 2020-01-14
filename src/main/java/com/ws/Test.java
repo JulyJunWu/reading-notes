@@ -9,12 +9,20 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.ByteToMessageDecoder;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.LockSupport;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.IntStream;
 
 import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE;
 
@@ -23,8 +31,100 @@ import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE;
  * @Author: QiuJunWu
  * @Date: 2019/10/11 0011 13:02
  */
+@Slf4j
 public class Test implements Serializable {
 
+    public static final AtomicInteger COUNT = new AtomicInteger();
+    public static final int NUM = 100;
+
+    @org.junit.Test
+    public void testSemaphore() {
+        Semaphore semaphore = new Semaphore(1);
+        for (int i = 0; i < NUM; i++) {
+            new Thread(() -> {
+                while (true) {
+                    try {
+                        // 获取锁 -1
+                        boolean acquire = semaphore.tryAcquire();
+                        if (acquire) {
+                            int num = COUNT.incrementAndGet();
+                            log.info("线程[{}] 获取到锁, 顺序[{}]", Thread.currentThread().getName(), num);
+                            TimeUnit.SECONDS.sleep(10);
+                            // 释放锁, +1
+                            semaphore.release();
+                        } else {
+                            log.info("线程[{}] 未获取到锁", Thread.currentThread().getName());
+                            TimeUnit.SECONDS.sleep(5);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }).start();
+        }
+        LockSupport.park();
+    }
+
+    @org.junit.Test
+    public void testCountdownLatch() throws Exception {
+        CountDownLatch downLatch = new CountDownLatch(2);
+        IntStream.range(0, 2).forEach(p -> new Thread(() -> {
+            while (true) {
+                System.out.println(Thread.currentThread().getName());
+                // 将CAS 将 state 减一
+                downLatch.countDown();
+                break;
+            }
+        }).start());
+
+        new Thread(() -> {
+            while (true) {
+                try {
+                    // 等待state小于等于0 , 唤醒
+                    downLatch.await();
+                    System.out.println(1);
+                    break;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+
+        // 当state大于0的时候,底层使用LockSupport.park()阻塞该线程;
+        // 当state小于等于0后,直接执行或者通过LockSupport.unPark()唤醒;
+        downLatch.await();
+        System.out.println(Thread.currentThread().getName());
+    }
+
+
+    @org.junit.Test
+    public void testLock() throws Exception {
+        ReentrantLock lock = new ReentrantLock();
+
+        Thread thread = new Thread(() -> {
+            boolean ok = true;
+            while (ok) {
+                // 通过CAS获取值,成功则获取锁,失败则通过 LockSupport.park()进入阻塞
+                lock.lock();
+                try {
+                    TimeUnit.SECONDS.sleep(10);
+                    System.out.println(1);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                } finally {
+                    // 释放锁,并通过 LockSupport.unPark(Thread)唤醒被阻塞的线程;
+                    lock.unlock();
+                    ok = false;
+                }
+            }
+        });
+
+        thread.start();
+        TimeUnit.SECONDS.sleep(1);
+        lock.lock();
+        System.out.println(2);
+
+    }
 
     @org.junit.Test
     public void date() throws Exception {
@@ -130,4 +230,5 @@ class EncoderHandler extends SimpleChannelInboundHandler<ByteBuf> {
             ctx.writeAndFlush(buffer);
         }
     }
+
 }
