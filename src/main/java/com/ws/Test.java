@@ -97,6 +97,16 @@ public class Test implements Serializable {
     }
 
 
+    /**
+     * 关于ReentrantLock 的公平锁与非公平锁:
+     *     默认是使用非公平锁
+     *     差异::
+     *          非公平锁只是针对 当某个线程需要获取锁的时候(刚好这个锁被释放了,但是内部等待队列中有线程等待唤醒获取锁),
+     *     这个时候该线程和等待的线程都有机会获取锁,也就是说非公平锁对进入等待队列阻塞的线程来说是不公平的;
+     *          公平锁: 当线程需要获取某个锁时(刚好该锁被释放了,但是内部依旧含有等待线程获取锁),这个时候该线程无法获取锁,因为需要进行排队;
+     *          这种公平锁就是建立在一个FIFO基础上
+     * @throws Exception
+     */
     @org.junit.Test
     public void testLock() throws Exception {
         ReentrantLock lock = new ReentrantLock();
