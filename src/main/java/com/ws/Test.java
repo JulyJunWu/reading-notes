@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -200,6 +201,14 @@ public class Test implements Serializable {
      * 解决CAS的ABA问题
      * 原理 : 本质还是通过CAS + unsafe + volatile 实现的 ,
      * 通过unsafe直接替换volatile修饰的对象
+     * <p>
+     * Vector              ->      SynchronizedList ->                             CopyOnWriteArrayList
+     * 所有操作都是同步            底层使用 Synchronized + ArrayList(装饰模式)     如名可知,只有写操作才是加锁的,使用ReentrantLock保证同步,直接通过Arrays拷贝新数据替换旧数据
+     * 效率低                      效率与Vector感觉差不多                          乐观锁 + 读写锁,并发量高(个人觉得并不是真正的线程安全)
+     * <p>
+     * CopyOnWriteArraySet :
+     * 与HashSet完全不全
+     * 底层使用的是CopyOnWriteArrayList
      */
     @org.junit.Test
     public void aba() throws Exception {
@@ -219,6 +228,13 @@ public class Test implements Serializable {
         reference.compareAndSet(100, 111, 2, 3);
         log.info("版本号为[{}] , 值为[{}]", reference.getStamp(), reference.getReference());
         log.info("pair[{}]", pair.get(reference));
+
+        CopyOnWriteArraySet<Object> objects = new CopyOnWriteArraySet<>();
+
+        objects.add(1);
+        objects.add(2);
+
+        objects.add(3);
     }
 }
 
