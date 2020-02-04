@@ -12,6 +12,7 @@ import io.netty.handler.codec.ByteToMessageDecoder;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
@@ -20,6 +21,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicStampedReference;
 import java.util.concurrent.locks.LockSupport;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.IntStream;
@@ -99,12 +101,13 @@ public class Test implements Serializable {
 
     /**
      * 关于ReentrantLock 的公平锁与非公平锁:
-     *     默认是使用非公平锁
-     *     差异::
-     *          非公平锁只是针对 当某个线程需要获取锁的时候(刚好这个锁被释放了,但是内部等待队列中有线程等待唤醒获取锁),
-     *     这个时候该线程和等待的线程都有机会获取锁,也就是说非公平锁对进入等待队列阻塞的线程来说是不公平的;
-     *          公平锁: 当线程需要获取某个锁时(刚好该锁被释放了,但是内部依旧含有等待线程获取锁),这个时候该线程无法获取锁,因为需要进行排队;
-     *          这种公平锁就是建立在一个FIFO基础上
+     * 默认是使用非公平锁
+     * 差异::
+     * 非公平锁只是针对 当某个线程需要获取锁的时候(刚好这个锁被释放了,但是内部等待队列中有线程等待唤醒获取锁),
+     * 这个时候该线程和等待的线程都有机会获取锁,也就是说非公平锁对进入等待队列阻塞的线程来说是不公平的;
+     * 公平锁: 当线程需要获取某个锁时(刚好该锁被释放了,但是内部依旧含有等待线程获取锁),这个时候该线程无法获取锁,因为需要进行排队;
+     * 这种公平锁就是建立在一个FIFO基础上
+     *
      * @throws Exception
      */
     @org.junit.Test
@@ -136,8 +139,13 @@ public class Test implements Serializable {
 
     }
 
+    /**
+     * JDK1.8 的时间
+     *
+     * @throws Exception
+     */
     @org.junit.Test
-    public void date() throws Exception {
+    public void date() {
 
         LocalDateTime now = LocalDateTime.now();
 
@@ -185,6 +193,32 @@ public class Test implements Serializable {
         Bootstrap bootstrap = new Bootstrap();
         ChannelFuture connect = bootstrap.group(group).channel(NioSocketChannel.class).handler(new EncoderHandler()).connect("127.0.0.1", 8888);
         connect.channel().closeFuture().sync();
+    }
+
+
+    /**
+     * 解决CAS的ABA问题
+     * 原理 : 本质还是通过CAS + unsafe + volatile 实现的 ,
+     * 通过unsafe直接替换volatile修饰的对象
+     */
+    @org.junit.Test
+    public void aba() throws Exception {
+
+        // 参数1: 代表需要进行同步修改的值
+        // 参数2: 表示版本号
+        AtomicStampedReference<Integer> reference = new AtomicStampedReference<>(100, 1);
+        log.info("版本号为[{}] , 值为[{}]", reference.getStamp(), reference.getReference());
+
+        Field pair = reference.getClass().getDeclaredField("pair");
+        pair.setAccessible(true);
+        log.info("pair[{}]", pair.get(reference));
+
+        boolean b = reference.attemptStamp(100, 2);
+        log.info("b[{}] , 版本号为[{}] , 值为[{}]", new Object[]{b, reference.getStamp(), reference.getReference()});
+
+        reference.compareAndSet(100, 111, 2, 3);
+        log.info("版本号为[{}] , 值为[{}]", reference.getStamp(), reference.getReference());
+        log.info("pair[{}]", pair.get(reference));
     }
 }
 
