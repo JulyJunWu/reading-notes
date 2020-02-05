@@ -17,14 +17,15 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicStampedReference;
 import java.util.concurrent.locks.LockSupport;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.IntStream;
 
 import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE;
@@ -40,6 +41,44 @@ public class Test implements Serializable {
     public static final AtomicInteger COUNT = new AtomicInteger();
     public static final int NUM = 100;
 
+
+    /**
+     * 可复用的类似定时的任务(只不过这边是定数执行任务), 当指定的参数1为变为0 时,触发一次 参数2指定的任务
+     * 当参数1 达到0 时,会重置为原始数值
+     * <p>
+     * 值得注意的是: 当参数1为变成0是 , 之前的线程会被await,当变为0 时,执行指定任务,并唤醒之前的线程;
+     *
+     * @throws Exception
+     */
+    @org.junit.Test
+    public void cyclicBarrier() throws Exception {
+
+        // 指定10次,当10为变为0时,线程进行阻塞,当变为0时,执行一次任务,唤醒所有的被阻塞的线程
+        CyclicBarrier barrier = new CyclicBarrier(10, () -> log.info("hello world!"));
+
+        int count = 20;
+        for (int i = 0; i < count; i++) {
+            new Thread(() -> {
+                try {
+                    log.info("线程[{}]", Thread.currentThread().getName());
+                    // 对10 进行--,当为0时执行任务并唤醒其余线程,同时重新设置为10
+                    barrier.await();
+                } catch (Exception e) {
+                }
+            }, i + "号").start();
+        }
+        LockSupport.park();
+    }
+
+    /**
+     * 计数信号量
+     * 定义锁的数量, 有多少数量就代表这有多少锁,
+     * 当使用完毕需要将锁放回,以供其他线程使用
+     * 不可重入 , 容易造成死锁
+     * 当state <= 0 ,代表当前的信号灯已经没有,
+     * 1.使用acquire则阻塞
+     * 2.使用tryAcquire则尝试获取锁,返回boolean类型
+     */
     @org.junit.Test
     public void testSemaphore() {
         Semaphore semaphore = new Semaphore(1);
@@ -68,6 +107,14 @@ public class Test implements Serializable {
         LockSupport.park();
     }
 
+    /**
+     * LockSupport.park
+     * LockSupport.unPark(Thread)
+     * CountdownLatch的功能类似于 Thread.join功能
+     * 指定所需要完成的个数,当个数变为0 时,则唤醒执行了CountdownLatch.await()的线程
+     *
+     * @throws Exception
+     */
     @org.junit.Test
     public void testCountdownLatch() throws Exception {
         CountDownLatch downLatch = new CountDownLatch(2);
@@ -196,6 +243,49 @@ public class Test implements Serializable {
         connect.channel().closeFuture().sync();
     }
 
+    /**
+     * 读写锁
+     * 场景:
+     * 写 写 -> 互斥
+     * 读 读 -> 共享
+     * 读 写 -> 互斥
+     */
+    @org.junit.Test
+    public void readWriteLock() throws Exception {
+        ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
+        ReentrantReadWriteLock.ReadLock readLock = readWriteLock.readLock();
+        ReentrantReadWriteLock.WriteLock writeLock = readWriteLock.writeLock();
+
+        new Thread(() -> {
+            writeLock.lock();
+            try {
+                log.info("获取写锁");
+                TimeUnit.SECONDS.sleep(5);
+            } catch (Exception e) {
+            } finally {
+                writeLock.unlock();
+            }
+        }, "写锁").start();
+
+        TimeUnit.SECONDS.sleep(1);
+
+        new Thread(() -> {
+            readLock.lock();
+            log.info("获取到读锁1");
+            readLock.unlock();
+        }, "读锁1").start();
+
+        TimeUnit.SECONDS.sleep(1);
+        new Thread(() -> {
+            writeLock.lock();
+            log.info("获取到写锁2");
+            writeLock.unlock();
+        }, "写2").start();
+
+        TimeUnit.SECONDS.sleep(1);
+        readLock.lock();
+        log.info("获取到读锁2");
+    }
 
     /**
      * 解决CAS的ABA问题
@@ -228,13 +318,6 @@ public class Test implements Serializable {
         reference.compareAndSet(100, 111, 2, 3);
         log.info("版本号为[{}] , 值为[{}]", reference.getStamp(), reference.getReference());
         log.info("pair[{}]", pair.get(reference));
-
-        CopyOnWriteArraySet<Object> objects = new CopyOnWriteArraySet<>();
-
-        objects.add(1);
-        objects.add(2);
-
-        objects.add(3);
     }
 }
 

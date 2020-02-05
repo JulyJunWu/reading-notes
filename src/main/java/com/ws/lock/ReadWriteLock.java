@@ -12,6 +12,7 @@ public interface ReadWriteLock {
 
     /**
      * 当前多少线程写操作线程数量
+     * @return
      */
     int getWritingWriters();
 
@@ -39,16 +40,14 @@ public interface ReadWriteLock {
 
         private final Object MUTEX = new Object();
 
-        private int writingWriters = 0;
+        private volatile int writingWriters = 0;
 
-        private int readingReaders = 0;
+        private volatile int readingReaders = 0;
 
-        private int waitingWriters = 0;
+        private volatile int waitingWriters = 0;
 
-        private boolean preferWriter;
 
         public ReadWriterLockImpl(boolean preferWriter) {
-            this.preferWriter = preferWriter;
         }
 
         public ReadWriterLockImpl() {
@@ -112,9 +111,6 @@ public interface ReadWriteLock {
             return MUTEX;
         }
 
-        public boolean isPreferWriter() {
-            return preferWriter;
-        }
     }
 
     /**
@@ -133,7 +129,7 @@ public interface ReadWriteLock {
 
             synchronized (readWriterLock.getMUTEX()) {
 
-                while (readWriterLock.getWritingWriters() > 0 || (readWriterLock.isPreferWriter() && readWriterLock.getWaitingWriters() > 0)) {
+                while (readWriterLock.getWritingWriters() > 0) {
                     readWriterLock.getMUTEX().wait();
                 }
                 //获取锁成功,将读锁数加一
@@ -148,7 +144,6 @@ public interface ReadWriteLock {
             synchronized (readWriterLock.getMUTEX()) {
 
                 readWriterLock.decrementReadingReaders();
-                readWriterLock.preferWriter = true;
                 readWriterLock.getMUTEX().notifyAll();
             }
 
@@ -194,8 +189,6 @@ public interface ReadWriteLock {
             synchronized (readWriterLockImpl.getMUTEX()) {
                 //写入锁--
                 readWriterLockImpl.decrementWritingWriters();
-
-                readWriterLockImpl.preferWriter = true;
 
                 //唤醒所有wait set 中的线程
                 readWriterLockImpl.getMUTEX().notifyAll();
