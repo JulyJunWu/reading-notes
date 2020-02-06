@@ -48,3 +48,22 @@ c 代表 char，f 代表 float，d 代表 double，a 代表 reference。也有�
     2.对浮点型数据进行运算的指令
     无论是那种算术指令，都是使用Java虚拟机的数字类型的。数据没有直接支持byte、short、char和boolean 类型的算术指令，对于这些数据的运算，
  都是使用操作int类型的指令。
+ 
+ jinfo : 查看正在运行的jvm的参数
+    如: jinfo pid 查看所有参数
+        jinfo -flag MetaspaceSize pid : 查看某个参数值 
+        jinfo -flags pid : 查看JVM参数
+ java -XX:+PrintFlagsInitial  查看初始JVM的参数
+ java -XX:+PrintFlagsFinal    查看修改的JVM的参数       := 表示修改过的参数
+ 比例:  新生代:老年代 = 1 : 2
+ -Xms                       初始堆大小
+ -Xmx                       最大堆大小
+ -Xss                       线程栈大小,根据平台而定,默认是1024K,但是JVM参数显示是0
+ -Xmn                       年轻代大小
+ -XX:MetaspaceSize          元空间大小
+ -XX:+PrintGCDetails        打印GC日志
+ -XX:SurvivorRatio          年轻代的比例, eden:from survivor:to survivor = 8 : 1 : 1 ,也就是说年轻代有可以使用的内存是9 : 1
+ -XX:NewRatio               老年代的占比,剩余一份为新生代;默认值2,年轻代与老年代的比例,也就是1:2
+ -XX:MaxTenuringThreshold   默认为15,该属性值必须是在0-15之间;存活对象进入老年代年龄(非绝对,如年轻代内存不足,大对象直接进老年代)
+ 注意:
+    当-Xmn与-XX:NewRatio同时存在,则实际值以-Xmn参数为准;
