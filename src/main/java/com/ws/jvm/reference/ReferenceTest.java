@@ -6,6 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 
 import java.lang.ref.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.WeakHashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -21,10 +23,23 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class ReferenceTest {
 
+    public static List list = new ArrayList<>();
+
     @AllArgsConstructor
     @Data
     public static class Ws {
         private String name;
+
+        public Ws(){}
+        /**
+         * 允许自救,只会生效一次
+         *
+         * @throws Throwable
+         */
+        @Override
+        protected void finalize() throws Throwable {
+            list.add(this);
+        }
     }
 
     /**
@@ -58,10 +73,18 @@ public class ReferenceTest {
 
         String b = "Hello";
         String c = "World";
+        // 在堆中创建了字符串对象,注意:常量池 并没有该字符串
         String d = b + c;
+        // 将该字符串添加到常量池中
         String s = d.intern();
         String e = "HelloWorld";
         log.info(" d == s -> {} | e == s -> {}", d == s, e == s);
+
+        // 常量池中 + 堆中 含有该字符串, 堆中的实际上指向的也是常量池中的地址;
+        String f = new String("Shit");
+        // false
+        String intern1 = f.intern();
+        log.info("{}", f == intern1);
     }
 
     /**
@@ -88,6 +111,13 @@ public class ReferenceTest {
         System.gc();
         ws = weakReference.get();
         log.info("{}", ws == null ? "已回收" : ws.name);
+
+        Ws fromList = (Ws) list.remove(0);
+        log.info("{}", fromList);
+        fromList = null;
+        System.gc();
+        TimeUnit.SECONDS.sleep(1);
+        list.forEach(System.out::println);
     }
 
     /**
