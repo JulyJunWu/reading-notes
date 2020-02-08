@@ -67,3 +67,63 @@ c 代表 char，f 代表 float，d 代表 double，a 代表 reference。也有�
  -XX:MaxTenuringThreshold   默认为15,该属性值必须是在0-15之间;存活对象进入老年代年龄(非绝对,如年轻代内存不足,大对象直接进老年代)
  注意:
     当-Xmn与-XX:NewRatio同时存在,则实际值以-Xmn参数为准;
+    
+ 查看默认垃圾收集器: java -XX:+PrintCommandLineFlags -version
+ JDK1.8默认使用的GC是 Parallel Scavenge(年轻代) + ParallelOld(老年代) : 就是参数 +XX:+UseParallelGC +XX:UseParallelOldGc
+ 推荐使用 ParNew + CMS 组合 , 当使用 -XX:+UseConcMarkSweepGC ,则默认使用的年轻代GC是 ParNew
+ 
+ GC参数如下:
+    -XX:+UseG1GC
+    -XX:+UseSerialGC
+    -XX:+UseSerialOldGC
+    -XX:+UseParNewGc
+    -XX:+UseConcMarkSweepGC
+    -XX:+UseParallelGC
+    -XX:+UseParallelOldGC
+ 年轻代GC:  都是基于复制算法
+        Serial : 单线程串行 , STW
+        ParallelScavenge : 并行,多线程版Serial,关注吞吐量,适用于科学计算
+        ParNew : 多线程版Serial
+ 老年代GC:  
+        SerialOld: 废弃 , 基于标记整理算法
+        CMS:  基于标记清除算法, 减少STW时间,SerialOld做担保;
+              四个阶段: 1.初始标记(STW) 2.并发标记(与用户线程并发执行) 3.重新标记(STW) 4.并发清除
+        ParallelOld: 与年轻代ParallelScavenge配合使用
+ 以及横跨2个代的 G1(通用型)
+ 
+ 性能调忧应该看的几个命令Linux:
+    uptime : 查看负载,就是查看load average指数
+    top    :   整机
+        load average : 1.4 0.9 0.41 : 代表 1 分钟,5分钟,15分钟的负载 , 三个数相加 / 3 * 100% > 60% 这说明负载过大 
+    iostat : 磁盘IO
+    ifstat : 网络IO
+    df     : 硬盘
+    vmstat : CPU
+    free   : 内存
+    
+ github操作:
+    根据匹配度检索 : 
+        关键词 in:name         : 搜索项目名包含xxx
+        关键词 in:description  : 搜索描述中包含xxx
+        关键词 in:readme       : 搜索readme中包含xxx
+        组合使用: 关键词 in:name,readme
+    根据star检索 :
+        格式: 关键词 stars:>数字 , 比如: springBoot stars:>5000
+    根据fork检索:
+        格式: 关键词 forks:>数字 , 如 springBoot forks:>7000    
+    组合使用fork和star 区间检索:
+        格式: 关键词 forks/stars:数字..数字
+              如 springBoot forks:100..200 -> 意为检索fork数量在100到200之间的含有springBoot的项目
+              如 springBoot stars:1000..5000 forks:200..500 -> 意为检索star数在1000到5000之间,fork数在200到500之间的springBoot项目
+    awesome检索: 精品项目    
+        格式: awesome 关键词 , 如 awesome springBoot
+    代码高亮显示一行:
+        格式: 代码所在地址 + #L + 代码所在行数  ,如  https://xxxxxx/Hello.java#13
+    代码高亮显示一段:
+        格式: 代码所在地址 + #L + 开始行 + -L + 结束行 , 如  https://xxxxxx/Hello.java#13-L15
+    英文t:
+        在项目的根路径,就是code页面 ,按下小写字母t,代码会按照树形排列
+    检索指定区域活跃用户:
+        格式: 关键字(可无) location:地区(一般为拼音) , 如 location:FuJian
+              在这基础上还可以限定语言,如 location:Fujian language:java
+  github快捷方式使用地址: https://help.github.com/en/github/getting-started-with-github/keyboard-shortcuts
