@@ -284,6 +284,7 @@ io.netty.selectorAutoRebuildThreshold: SELECTOR_AUTO_REBUILD_THRESHOLD
    典型的就是ChannelFuture(ChannelFutureListener),也可以说是一种回调
 6.工厂模式
   DefaultEventExecutorChooserFactory/ReflectiveChannelFactory
+  DefaultThreadFactory
 7.模板模式
   抽象父类定义流程,具体实现由子类实现;
     ByteToMessageDecoder(如抽象方法decode)

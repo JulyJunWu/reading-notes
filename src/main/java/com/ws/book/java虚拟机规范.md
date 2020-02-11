@@ -101,6 +101,12 @@ c 代表 char，f 代表 float，d 代表 double，a 代表 reference。也有�
     vmstat : CPU
     free   : 内存
     
+ cpu占用过高linux排查:
+    1.top命令定位到占用过高cpu的java程序的pid
+    2.定位到具体线程,命令: ps -mp pid -o THREAD,tid,time 定位到具体的线程id(10进制的)
+    3.将10进制线程id转换为16进制(字母小写),得到16进制的tid
+    4.使用jdk自带命令: jstack pid | grep tid -A60
+    
  github操作:
     根据匹配度检索 : 
         关键词 in:name         : 搜索项目名包含xxx
@@ -127,3 +133,5 @@ c 代表 char，f 代表 float，d 代表 double，a 代表 reference。也有�
         格式: 关键字(可无) location:地区(一般为拼音) , 如 location:FuJian
               在这基础上还可以限定语言,如 location:Fujian language:java
   github快捷方式使用地址: https://help.github.com/en/github/getting-started-with-github/keyboard-shortcuts
+  
+  
