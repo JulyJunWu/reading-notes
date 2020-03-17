@@ -1,0 +1,77 @@
+
+linux提供的socket函数
+创建一个socket如下:
+   socket = fd; 获得一个文件描述符
+   socket.bind
+   socket.listen
+   socket.accept
+
+追踪程序子进程/启动线程数等等信息命令
+    strace -ff -o ./ooxx    java TestSocket
+   命令           输出的路径  执行的命令
+
+java中的线程在linux中是要进行clone
+
+中断 -> 会产生一个中断事件 , 如果是epoll的话就知道这个是什么事件类型,就可以给epoll_wait中存放该事件,java中的select()就有返回数
+通过selector.selectedKeys()就可以获得该事件的数据
+
+网卡
+
+IO多路复用: select/poll/epoll都实现了IO多路复用
+
+epoll实现了事件驱动和IO多路复用
+   epoll ->
+        epoll_create
+        epoll_ctl
+        epoll_wait : 就是在java代码里调用select的返回数据(如果有的话)
+
+/proc/pid/fd  文件描述符(Linux中一切皆文件): 相当于 打开的文件 或者是一个 socket
+    0 : 标准输入
+    1 : 标准输出
+    2 : 错误输出
+
+TCP : 面向连接的 可靠的传输协议
+
+  三次握手:
+    A:客户端 B:服务端
+    A -> B 发送sync
+    B -> A 响应请求sync + ack
+    A -> B 发送ack
+  四次分手:
+    A -> B 发送fin
+    B -> A 响应fin + ack
+    B -> A 发送断开连接命令fin
+    B -> A 响应断开ack
+  粒度: 不应该被拆散,意思是三次捂手 A -> B 了, 后续的就不要发给 A -> C
+抓包程序命令:
+    tcpdump -nn -i eth0 port 80
+    [P.] : 告知tcp数据已经到达完整了,停止缓存数据,立即执行
+
+ps -fe | grep nc
+
+/proc/pid/fd 服务端会开启一个监听的文件描述符
+
+
+追踪程序对内核的调用:
+  strace -ff -o 保存的路径 需要执行的命令
+  如 strace -ff -o ./log nc -lk 8080
+
+man 2 socket
+man 2 bind
+man 2 listen
+man 2 accept
+
+系统调用(system call): read write socket bind listen accept等等
+kernel内核提供上述方法的实现,对系统暴露函数
+
+应用 -> socket -> 内核
+
+linux创建线程是通过clone函数
+
+epoll_create : 创建一个epoll专用的文件描述符.它其实是在内核申请一空间，用来存放你想关注的socket fd上是否发生以及发生了什么事件
+epoll_ctl    : 该函数用于控制某个epoll文件描述符上的事件，可以注册事件，修改事件，删除事件。
+epoll_wait   : 该函数用于轮询I/O事件的发生
+
+zero copy零拷贝:内核实现 sendfile函数
+
+直接内存: 共享空间buffer mmap
