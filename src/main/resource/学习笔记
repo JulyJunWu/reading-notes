@@ -75,3 +75,20 @@ epoll_wait   : 该函数用于轮询I/O事件的发生
 zero copy零拷贝:内核实现 sendfile函数
 
 直接内存: 共享空间buffer mmap
+
+mysql:
+
+    hash表 :使用等值查询,不适合范围查询,排序,分组
+    innodb
+
+Object o = new Object : 开启压缩则占用16个字节,不开启压缩也是16字节
+注意在64位操作系统默认开启指针压缩,jvm参数
+-XX:+UseCompressClassPointer 开启指针压缩(默认开启)
+-XX:-UseBiasedLocking 禁用偏向锁
+
+对象布局:
+    markword
+    class pointer  类型指针,指向所属的Class实例的指针
+    instance data  实例数据
+    padding        对齐(只要累计的字节数不是8的倍数,那么就需要进行填充,直到为8的倍数)
+  注意:: markword +  class pointer = 对象头
