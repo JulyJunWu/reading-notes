@@ -1,0 +1,21 @@
+
+Hyper-v虚拟机无法上网,无ip解决(关于Hyper-V下安装centos 设置静态IP又可ping外网的记录):
+    https://blog.csdn.net/u011598235/article/details/93883146?utm_medium=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-1.nonecase&depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-1.nonecase
+
+traceroute: 可以知道信息从你的计算机到互联网另一端的主机是走的什么路径。
+在线安装: yum -y install traceroute
+
+echo $$ : 打印当前进程pid
+
+cd /proc/pid/fd目录
+    0:代表标准输入
+    1:代表标准输出
+    2:代表错误输出
+exec : 相当于一个死循环,当外部传进来的一个cmd,如ls ,那么将死循环中的命令替换为ls,执行完毕后关闭程序(退出shell)
+exec 12<> /dev/tcp/www.baidu.com/80 : 在当前进程重定向,创建了一个socket,开启一个百度的tcp连接,文件句柄为12
+echo -e "GET /HTTP/1.0\n" 1>& 12 :向百度发起一个GET请求
+cat 0 <& 12 , 将百度的响应输入到控制台
+
+抓包工具tcpdump
+安装: yum install tcpdump
+指定网卡监听80端口: tcpdump -nn -i eth0 port 80
