@@ -19,3 +19,5 @@ cat 0 <& 12 , 将百度的响应输入到控制台
 抓包工具tcpdump
 安装: yum install tcpdump
 指定网卡监听80端口: tcpdump -nn -i eth0 port 80
+
+路由表: netstat -rn
