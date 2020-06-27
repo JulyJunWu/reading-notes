@@ -21,3 +21,11 @@ cat 0 <& 12 , 将百度的响应输入到控制台
 指定网卡监听80端口: tcpdump -nn -i eth0 port 80
 
 路由表: netstat -rn
+查看ARP缓存(Address Resolution Protocol): arp -a
+查看ARP缓存大小:
+    [root@jun ~]# cat /proc/sys/net/ipv4/neigh/default/gc_thresh1
+    128
+    [root@jun ~]# cat /proc/sys/net/ipv4/neigh/default/gc_thresh2
+    512
+    [root@jun ~]# cat /proc/sys/net/ipv4/neigh/default/gc_thresh3
+    1024
