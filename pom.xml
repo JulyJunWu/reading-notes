@@ -173,6 +173,27 @@
                     <target>1.8</target>
                 </configuration>
             </plugin>
+
+            <!--这个插件是为了测试java agent-->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>2.3.1</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <addClasspath>true</addClasspath>
+                        </manifest>
+                        <manifestEntries>
+                            <!--让maven给我们在MANIFEST.MF文件中生成对应的参数-->
+                            <Premain-Class>com.ws.agent.PreMainAgent</Premain-Class>
+                            <!--<Agentmain-Class>com.ws.agent.MyAgent</Agentmain-Class>-->
+                            <!--设置main方法-->
+                            <Main-Class>com.ws.agent.AgentTest</Main-Class>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+            </plugin>
         </plugins>
 
         <resources>
