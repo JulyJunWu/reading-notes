@@ -159,6 +159,16 @@
             <version>0.9</version>
         </dependency>
 
+        <!--如果不是测试agent,那么可以屏蔽这个依赖-->
+        <dependency>
+            <groupId>com.sun</groupId>
+            <artifactId>tools</artifactId>
+            <version>1.8.0</version>
+            <scope>system</scope>
+            <!--需要修改为自己系统上的路径-->
+            <systemPath>D:/jdk_1.8/lib/tools.jar</systemPath>
+        </dependency>
+
 
     </dependencies>
 
@@ -175,6 +185,7 @@
             </plugin>
 
             <!--这个插件是为了测试java agent-->
+            <!--这个插件是为了测试java agent-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
@@ -186,10 +197,10 @@
                         </manifest>
                         <manifestEntries>
                             <!--让maven给我们在MANIFEST.MF文件中生成对应的参数-->
-                            <Premain-Class>com.ws.agent.PreMainAgent</Premain-Class>
-                            <!--<Agentmain-Class>com.ws.agent.MyAgent</Agentmain-Class>-->
-                            <!--设置main方法-->
-                            <Main-Class>com.ws.agent.AgentTest</Main-Class>
+                            <Agent-Class>com.ws.agentmain.AgentMain</Agent-Class>
+                            <Premain-Class>com.ws.agentmain.AgentMain</Premain-Class>
+                            <Can-Redefine-Classes>true</Can-Redefine-Classes>
+                            <Can-Retransform-Classes>true</Can-Retransform-Classes>
                         </manifestEntries>
                     </archive>
                 </configuration>

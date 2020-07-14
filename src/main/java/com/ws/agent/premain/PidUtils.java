@@ -1,4 +1,4 @@
-package com.ws.agent;
+package com.ws.agent.premain;
 
 import java.lang.management.ManagementFactory;
 
