@@ -73,7 +73,6 @@ epoll_ctl    : 该函数用于控制某个epoll文件描述符上的事件，可
 epoll_wait   : 该函数用于轮询I/O事件的发生
 
 zero copy零拷贝:内核实现 sendfile函数
-
 直接内存: 共享空间buffer mmap
 
 mysql:
@@ -92,3 +91,13 @@ Object o = new Object : 开启压缩则占用16个字节,不开启压缩也是16
     instance data  实例数据
     padding        对齐(只要累计的字节数不是8的倍数,那么就需要进行填充,直到为8的倍数)
   注意:: markword +  class pointer = 对象头
+
+汇编:
+    在汇编中,add是加法bai,mov是移动,sub则是减法.
+    add,sub,,mov一样，都有2个操作对象.
+    例子:
+        mov ax 9 -> 相当于 ax = 9
+        add ax 9 -> 相当于 ax = ax + 9
+    jmp: 为CS:IP赋值(CS:IP只能通过jmp赋值)
+    例子:
+        jmp ax; // 仅修改IP值
