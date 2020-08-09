@@ -55,6 +55,7 @@ ps -fe | grep nc
 追踪程序对内核的调用:
   strace -ff -o 保存的路径 需要执行的命令
   如 strace -ff -o ./log nc -lk 8080
+  strace less filename
 
 man 2 socket
 man 2 bind
@@ -101,3 +102,4 @@ Object o = new Object : 开启压缩则占用16个字节,不开启压缩也是16
     jmp: 为CS:IP赋值(CS:IP只能通过jmp赋值)
     例子:
         jmp ax; // 仅修改IP值
+
