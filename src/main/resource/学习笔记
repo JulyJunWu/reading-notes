@@ -55,6 +55,7 @@ ps -fe | grep nc
 追踪程序对内核的调用:
   strace -ff -o 保存的路径 需要执行的命令
   如 strace -ff -o ./log nc -lk 8080
+  strace less filename
 
 man 2 socket
 man 2 bind
