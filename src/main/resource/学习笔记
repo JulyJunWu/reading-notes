@@ -101,3 +101,7 @@ Object o = new Object : 开启压缩则占用16个字节,不开启压缩也是16
     jmp: 为CS:IP赋值(CS:IP只能通过jmp赋值)
     例子:
         jmp ax; // 仅修改IP值
+
+java程序后台运行:
+   前台运行: java -jar jenkins.war -httpport=8080
+   后台运行: nohup java -jar jenkins.war -httpport=8080 &
