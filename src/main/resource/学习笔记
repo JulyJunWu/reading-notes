@@ -106,3 +106,36 @@ Object o = new Object : 开启压缩则占用16个字节,不开启压缩也是16
 java程序后台运行:
    前台运行: java -jar jenkins.war -httpport=8080
    后台运行: nohup java -jar jenkins.war -httpport=8080 &
+
+TCP状态:
+     accept队列(FIFO)的容量,主要是接受新客户端的连接 (已经完成了三次握手的连接), 服务器还未accept的连接
+     accept()操作其实就是从accept队列中取出一个连接(连接已经完成握手)进行处理
+     如果服务器不进行accept()处理,那么当队列容量达到上限时,后续新增的连接将会被拒绝,有点类似于阻塞队列
+
+     acceptCount数量其实就是表示TCP内核队列的长度,也就是TCP队列中的 A + B 队列的长度
+
+      TCP内核中两个队列 A B 队列
+      A 队列存放第一次握手成功的连接
+      B 队列存放三次握手成功的连接(成功的同时会将A队列中的移除,将入到B队列中)
+      通过accept()从B 队列取出队列
+      A 队列数量 + B 队列队列数量 = backlog , 也就是此处的acceptCount = 100;
+
+      TCP的连接状态 (SYN, FIN, ACK, PSH, RST, URG)
+       1、SYN表示建立连接
+       2、FIN表示关闭连接
+       3、ACK表示响应
+       4、PSH表示有 DATA数据传输
+       5、RST表示连接重置。
+     TCP握手的流程:
+      1.client向server发送SYN数据包(syn=j),进入SYN_SEND状态
+      2.server接收SYN,确认SYN(ACK=j+1),加入到A队列,并返回SYN+ACK应答给client,服务器进入SYN_RECV状态
+      3.client接收到SYN+ACK数据包,并将ACK返回给server
+      4.server确认ACK,将连接从A队列移除并加入到B队列中,连接建立完毕,client和server进入ESTABLISHED状态,可以开始传输数据
+
+      A + B的长度大于backlog时，新的连接会被TCP内核拒绝
+      若backlog过小,可能出现accept的速度跟不上,A,B队列满了,导致客户端无法建立连接
+      注意:backlog对程序的连接数没影响,但影响的是未被accept取出的连接
+
+     JDK默认是50个
+     tomcat默认100
+     netty默认 200
