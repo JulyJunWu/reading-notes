@@ -318,5 +318,17 @@ public class MyBatisTest {
         Object one = sessionTemplate.selectOne("test.selectById", "199adfb8118111eab6558c16457fff38");
         log.info("{}", one);
     }
+
+    /**
+     * 使用mybatis更新多条sql
+     */
+    @Test
+    public void testUpdateList(){
+        SqlSession sqlSession = sqlSessionFactory.openSession();
+        List<User> allUser = sqlSession.selectList("test.selectAll");
+        allUser.forEach(p->p.setAge(88));
+        sqlSession.update("test.updateUserList",allUser);
+        sqlSession.commit();
+    }
 }
 

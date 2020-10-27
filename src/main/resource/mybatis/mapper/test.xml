@@ -9,12 +9,15 @@
     </sql>
 
     <select id="selectAll" resultType="user" parameterType="user">
-        select <include refid="allColumn"/>
-        from  user limit 10
+        select
+        <include refid="allColumn"/>
+        from user limit 10
     </select>
 
     <select id="selectById" parameterType="string" resultType="user">
-        select <include refid="allColumn"/> from user where id = #{id}
+        select
+        <include refid="allColumn"/>
+        from user where id = #{id}
     </select>
 
     <insert id="insert" parameterType="user">
@@ -41,7 +44,15 @@
         where id = #{id}
     </update>
 
-
+    <update id="updateUserList" parameterType="java.util.List">
+        <foreach collection="list" item="item" separator="" open="" close="">
+            update user
+            <set>
+                age = #{item.age}
+            </set>
+            where id = #{item.id};
+        </foreach>
+    </update>
 
 
 </mapper>
